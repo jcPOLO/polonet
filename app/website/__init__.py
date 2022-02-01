@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
@@ -7,15 +7,12 @@ from flask_migrate import Migrate
 
 
 db = SQLAlchemy() 
-DB_NAME = "database.db"
-UPLOAD_FOLDER = f'{dir_path}'
 
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'asdf'
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    app.config.from_object('config')
+
     migrate = Migrate(app, db)
 
     db.init_app(app)
@@ -40,12 +37,18 @@ def create_app():
         if user:
             return user
         return None
-        # return User.query.get(int(id))
+    
+    # Sample HTTP error handling
+    @app.errorhandler(404)
+    def not_found(error):
+        return render_template('404.html'), 404
 
     return app
 
 
 def create_database(app):
-    if not path.exists('website/' + DB_NAME):
+    if not path.exists(
+        path.join(app.config['BASE_DIR'], app.config['DB_NAME'])
+    ):
         db.create_all(app=app)
         print('Created Database')

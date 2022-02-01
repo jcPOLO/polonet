@@ -13,7 +13,7 @@
 *hosts.yaml
 *final.j2
 *.csv.*
-database.db
+app.db
 
 # User-specific files
 *.rsuser

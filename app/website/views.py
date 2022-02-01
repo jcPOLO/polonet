@@ -72,8 +72,11 @@ def upload_file():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], 'inventory.csv'))
-            with open(f"{os.path.join(current_app.config['UPLOAD_FOLDER'], 'inventory.csv')}") as f:
+            final_filename = os.path.join(
+                current_app.config['UPLOAD_FOLDER'], 
+                current_app.config['INVENTORY_FILE'])
+            file.save(final_filename)
+            with open(final_filename) as f:
                 inventory = f.read()
             print(inventory)
             name = filename
