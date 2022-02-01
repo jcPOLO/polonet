@@ -4,9 +4,9 @@ import yaml
 import pathlib
 from typing import Dict
 from csv import DictReader
-from auto_nornir.core.helpers import check_directory, configure_logging, dir_path
-from auto_nornir.core.models.device import Device
-from auto_nornir.core.exceptions import ValidationException
+from app.core.helpers import check_directory, configure_logging, dir_path
+from app.core.models.device import Device
+from app.core.exceptions import ValidationException
 
 
 logger = logging.getLogger(__name__)

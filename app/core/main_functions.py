@@ -1,6 +1,6 @@
 from nornir.core import Task
-from auto_nornir.core.helpers import check_directory
-from auto_nornir.core.tasks import backup_config, save_config, get_version, get_facts, basic_configuration, get_config_section, software_upgrade, set_rsa, get_dir
+from app.core.helpers import check_directory
+from app.core.tasks import backup_config, save_config, get_version, get_facts, basic_configuration, get_config_section, software_upgrade, set_rsa, get_dir
 from typing import List
 # import configparser
 import logging

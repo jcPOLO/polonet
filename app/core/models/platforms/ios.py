@@ -1,9 +1,9 @@
 from nornir_netmiko.tasks import netmiko_send_command, netmiko_save_config, netmiko_file_transfer
 from nornir.core.task import Result, Task
 from typing import List, Dict
-from auto_nornir.core.models.platform import PlatformBase
-from auto_nornir.core.helpers import HumanBytes
-from auto_nornir.core.exceptions import RuntimeErrorException
+from app.core.models.platform import PlatformBase
+from app.core.helpers import HumanBytes
+from app.core.exceptions import RuntimeErrorException
 import os
 import logging
 

@@ -1,5 +1,5 @@
-from auto_nornir.core.exceptions import ValidationException
-from auto_nornir.core.helpers import is_ip
+from app.core.exceptions import ValidationException
+from app.core.helpers import is_ip
 
 
 # supported platforms at the moment

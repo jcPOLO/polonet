@@ -2,8 +2,8 @@ from typing import Dict, List
 from nornir.core import Task
 from nornir_jinja2.plugins.tasks import template_file
 from nornir_netmiko.tasks import netmiko_send_config
-from auto_nornir.core.helpers import check_directory, dir_path
-from auto_nornir.core.models.platforms.platform_factory import PlatformFactory
+from app.core.helpers import check_directory, dir_path
+from app.core.models.platforms.platform_factory import PlatformFactory
 import configparser
 import logging
 import os

@@ -2,12 +2,12 @@ from nornir import InitNornir
 from nornir.core import Nornir
 from nornir.core.task import AggregatedResult
 from nornir_utils.plugins.functions import print_result
-from auto_nornir.core.main_functions import container_task
-from auto_nornir.core.models.menu import Menu
-from auto_nornir.core.models.bootstrap import Bootstrap
-from auto_nornir.core.models.filter import Filter
-from auto_nornir.core.helpers import configure_logging, dir_path
-import auto_nornir.core.output
+from app.core.main_functions import container_task
+from app.core.models.menu import Menu
+from app.core.models.bootstrap import Bootstrap
+from app.core.models.filter import Filter
+from app.core.helpers import configure_logging, dir_path
+import app.core.output
 # from tqdm import tqdm
 import getpass
 from typing import List
@@ -88,7 +88,7 @@ def main() -> None:
     print_result(result)
 
     # ---------------------------------------------------
-    auto_nornir.core.output.facts_for_customer_csv(result)
+    app.core.output.facts_for_customer_csv(result)
     # ---------------------------------------------------
 
     t1_stop = perf_counter()
