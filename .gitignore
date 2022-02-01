@@ -13,7 +13,6 @@
 *hosts.yaml
 *final.j2
 *.csv.*
-*.log
 database.db
 
 # User-specific files

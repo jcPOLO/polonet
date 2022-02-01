@@ -2,6 +2,7 @@ import logging
 import configparser
 import yaml
 import pathlib
+import io
 from typing import Dict
 from csv import DictReader
 from app.core.helpers import check_directory, configure_logging, dir_path
@@ -32,8 +33,8 @@ class Bootstrap(object):
 
     def __init__(
         self,
-        ini_file: str = f'{dir_path}/../.global.ini',
         csv_file: str = f'{dir_path}/inventory.csv',
+        ini_file: str = f'{dir_path}/../.global.ini',
         encoding: str = "utf-8"
     ):
 
@@ -86,3 +87,26 @@ class Bootstrap(object):
         check_directory(path)
         with open(filename, 'w') as f:
             f.write(yml)
+
+    # Return a dictionary from imported csv file
+    @classmethod
+    def import_inventory_text(cls, csv_data) -> dict:
+        result = {}
+        devices = {}
+        csv_reader = DictReader(io.StringIO(csv_data))
+        fields = 'hostname'
+        csv_fields = set(csv_reader.fieldnames)
+        wrong_headers = False if fields in csv_fields else True
+        if not wrong_headers:
+            # create dict of Devices from CSV
+            for row in csv_reader:
+                hostname = row['hostname'].strip()
+                if hostname not in devices.keys():
+                    devices[hostname] = Device(**row)
+        else:
+            message = '{} not in csv header'.format(wrong_headers)
+            logger.error(message)
+            raise ValidationException("fail-config", message)
+        for h, n in devices.items():
+            result[h] = dict(n)
+        return result

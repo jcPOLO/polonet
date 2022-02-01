@@ -1,14 +1,14 @@
-import os
-from pathlib import Path
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
+from app.core.helpers import dir_path
+from flask_migrate import Migrate
 
 
-db = SQLAlchemy()
+db = SQLAlchemy() 
 DB_NAME = "database.db"
-UPLOAD_FOLDER = './inventory'
+UPLOAD_FOLDER = f'{dir_path}'
 
 
 def create_app():
@@ -16,6 +16,8 @@ def create_app():
     app.config['SECRET_KEY'] = 'asdf'
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    migrate = Migrate(app, db)
+
     db.init_app(app)
 
     from .views import views
@@ -24,7 +26,7 @@ def create_app():
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
 
-    from .models import User, Note
+    from .models import User, Inventory
 
     create_database(app)
 

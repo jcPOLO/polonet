@@ -49,13 +49,13 @@ def on_failed_host(devices: 'Nornir', result: 'AggregatedResult'):
     )
 
 
-def main() -> None:
+def main(inventory='inventory.csv') -> None:
     # configure logger
     configure_logging(logger)
 
     # creates hosts.yaml from csv file, ini file could be passed as arg,
     # by default .global.ini
-    bootstrap = Bootstrap()
+    bootstrap = Bootstrap(inventory)
     bootstrap.load_inventory()
 
     # initialize Nornir object

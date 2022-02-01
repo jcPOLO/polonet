@@ -108,4 +108,11 @@ class Device(object):
 
     def __iter__(self):
         for k, v in self._device_dict().items():
-            yield k, v
+            # remove empty attributes
+            if v:
+                # custom keys inside data are shown, data key is not shown.
+                if k == 'data':
+                    for a, b in self._device_dict()[k].items():
+                        yield a, b
+                else:
+                    yield k, v

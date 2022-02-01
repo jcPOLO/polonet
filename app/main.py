@@ -1,9 +1,10 @@
 from website import create_app
 from core import core
+import sys
 
-web = input("web?")
-if 'n' in web:
-    core.main()
+if len(sys.argv) > 1:
+    print(sys.argv[1])
+    core.main(sys.argv[1])
     exit()
 else:
     app = create_app()

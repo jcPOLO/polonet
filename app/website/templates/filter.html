@@ -5,6 +5,25 @@ Filtering menu
 {% block content %}
 <h1>This is the filtering menu</h1>
 <h1 align="center">Devices</h1>
+<table class="table table-striped table-sortable">
+    <thread>
+        <tr>
+            {% for key in custom_keys %}
+            <th>{{ key }}</th>
+            {% endfor %}
+        </tr>
+    </thread>
+    <tbody>
+        {% for device in devices %}
+        <tr>
+            <th>{{ device }}</th>
+            <th>{{ device }} jarenawer</th>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
 <ul class="list-group list-group-flush" id="notes">
     {% for device in devices %}
     <li class="list-group-item">{{ device }}</list>
