@@ -5,15 +5,15 @@ Login
 {% block content %}
 <h1>This is the login page</h1>
 <form method="POST">
+    {{ form.hidden_tag() }}
     <h3 align="center">Login</h3>
     <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="Enter email"/>
-        <label for="password">Password</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password"/>
+        {{ form.email.label }}
+        {{ form.email(type="email", class="form-control", id="email", placeholder="Enter email" ) }}
+        {{ form.password.label }}
+        {{ form.password(class="form-control", id="password", placeholder="Enter password" ) }}
     </div>
     <br />
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>          
-{{ text }}
+    {{ form.submit(class="btn btn-primary") }}
+</form>
 {% endblock %}
