@@ -4,6 +4,7 @@ Home
 {% endblock %}
 {% block content %}
 <h1 align="center">Inventory {{ inventory.name }}</h1>
+<input type="text" name="search" id="search" placeholder="">
 <table id="inventoryTable" class="table table-striped table-sortable">
     <thread>
         <tr>
@@ -16,7 +17,7 @@ Home
         {% for i in values %}
         <tr>
             {% for key in values[i].keys() %}
-            <th>{{ values[i][key] }}</th>
+            <td>{{ values[i][key] }}</td>
             {% endfor %}
         </tr>
         {% endfor %}

@@ -1,5 +1,6 @@
 import json
 import os
+import logging
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
@@ -9,7 +10,9 @@ from app.core.models.bootstrap import Bootstrap
 from app.core.models.device import Device
 from app.core.helpers import configure_logging, dir_path
 from nornir import InitNornir
-import logging
+from .forms import InventoryForm
+from app.core.exceptions import ValidationException
+
 
 
 inventory_bp = Blueprint('inventory_bp', __name__, template_folder='templates')
@@ -28,24 +31,28 @@ def allowed_file(filename):
 @inventory_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
-    if request.method == 'POST':
-        inventory = request.form.get('inventory')
-        inventory_name = request.form.get('inventoryName')
+    form = InventoryForm()
+    if form.validate_on_submit():
+        inventory = form.inventory.data
+        name = form.name.data
         inventory_exists = Inventory.query.filter_by(data=inventory, user_id=current_user.id).first() 
-        inventory_name_exists = Inventory.query.filter_by(name=inventory_name, user_id=current_user.id).first()
-        if inventory_exists or inventory_name_exists:
+        name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
+        if inventory_exists or name_exists:
             flash('Inventory already exists!', category='error')
         else:
-            if len(inventory) < 1 or inventory_name=='':
+            if len(inventory) < 1 or name=='':
                 flash('Inventory does not have name or is empty', category='error')
             else:
                 try:
-                    Bootstrap.import_inventory_text(inventory)
-                except:
-                    flash('Inventory validation failed', category='error')
+                    inventory = Bootstrap.import_inventory_text(inventory)
+                except ValidationException as e:
+                    flash(f'{e.message}', category='error')
+                    return redirect(url_for('inventory_bp.home'))
+                except AttributeError:
+                    flash('Bad inventory', category='error')
                     return redirect(url_for('inventory_bp.home'))
                 new_inventory = Inventory(
-                    name=inventory_name,
+                    name=name,
                     data=inventory, 
                     user_id=current_user.id
                 )
@@ -54,7 +61,7 @@ def home():
                 flash('Inventory created!', category='success')
                 return redirect(url_for('inventory_bp.home'))
 
-    return render_template("inventory/home.html", user=current_user)
+    return render_template("inventory/home.html", user=current_user, form=form)
 
 @inventory_bp.route('/upload', methods=['POST', 'GET'])
 @login_required

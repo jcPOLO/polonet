@@ -104,7 +104,7 @@ class Bootstrap(object):
                 if hostname not in devices.keys():
                     devices[hostname] = Device(**row)
         else:
-            message = '{} not in csv header'.format(wrong_headers)
+            message = '{} not in csv header'.format(fields)
             logger.error(message)
             raise ValidationException("fail-config", message)
         for h, n in devices.items():

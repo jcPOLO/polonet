@@ -1,13 +1,15 @@
-from wtforms import SubmitField, StringField
-from wtforms.validators import Email, DataRequired
+from wtforms import SubmitField, StringField, TextAreaField
+from wtforms.validators import DataRequired
 from app.forms import BaseForm
 
 
-# Define the login form (WTForms) for /login and /singup
-class LoginForm(BaseForm):
-    email = StringField('Email Address',
+class InventoryForm(BaseForm):
+    name = StringField('Inventory name',
     validators=[
-        Email(),
-        DataRequired(message='Forgot your email address?')
+        DataRequired(message='Forgot introduce an inventory name?')
     ])
-    submit = SubmitField("Submit")
+    inventory = TextAreaField('Paste csv formated text inventory.',
+    validators=[
+        DataRequired(message='Forgot to paste csv formated text inventory?')
+    ])
+    submit = SubmitField("Add inventory")
