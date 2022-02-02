@@ -2,8 +2,8 @@ import json
 import os
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from flask_login import login_required, current_user
-from . import db
-from .models import Inventory
+from app import db
+from app.inventory.models import Inventory
 from werkzeug.utils import secure_filename
 from app.core.models.bootstrap import Bootstrap
 from app.core.models.device import Device
@@ -12,7 +12,7 @@ from nornir import InitNornir
 import logging
 
 
-views = Blueprint('views', __name__)
+inventory_bp = Blueprint('inventory_bp', __name__, template_folder='templates')
 logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = {'txt', 'csv'}
@@ -25,7 +25,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@views.route('/', methods=['GET', 'POST'])
+@inventory_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
     if request.method == 'POST':
@@ -43,7 +43,7 @@ def home():
                     Bootstrap.import_inventory_text(inventory)
                 except:
                     flash('Inventory validation failed', category='error')
-                    return redirect(url_for('views.home'))
+                    return redirect(url_for('inventory_bp.home'))
                 new_inventory = Inventory(
                     name=inventory_name,
                     data=inventory, 
@@ -52,11 +52,11 @@ def home():
                 db.session.add(new_inventory)
                 db.session.commit()
                 flash('Inventory created!', category='success')
-                return redirect(url_for('views.home'))
+                return redirect(url_for('inventory_bp.home'))
 
-    return render_template("home.html", user=current_user)
+    return render_template("inventory/home.html", user=current_user)
 
-@views.route('/upload', methods=['POST', 'GET'])
+@inventory_bp.route('/upload', methods=['POST', 'GET'])
 @login_required
 def upload_file():
     if request.method == 'POST':
@@ -95,12 +95,12 @@ def upload_file():
                     db.session.add(new_inventory)
                     db.session.commit()
                     flash('File uploaded', category='success')
-                    return redirect(url_for('views.home'))
+                    return redirect(url_for('inventory_bp.home'))
         else:
             flash('File type must be csv or txt', category='error')
-    return redirect(url_for('views.home'))
+    return redirect(url_for('inventory_bp.home'))
 
-@views.route('/auto-nornir', methods=['POST', 'GET'])
+@inventory_bp.route('/auto-nornir', methods=['POST', 'GET'])
 @login_required
 def auto_nornir():
     if request.method == 'GET':
@@ -124,14 +124,14 @@ def auto_nornir():
 
 
         return render_template(
-            "filter.html", 
+            "inventory/filter.html", 
             user=current_user, 
             devices=devices,
             custom_keys=custom_keys,
         )
 
 
-@views.route('/inventory/<name>', methods=['POST', 'GET', 'DELETE'])
+@inventory_bp.route('/inventory/<name>', methods=['POST', 'GET', 'DELETE'])
 @login_required
 def inventory(name):
     if request.method == 'GET':
@@ -142,7 +142,7 @@ def inventory(name):
             # get first dict element keys.
             keys = list(values.values())[0].keys()
             return render_template(
-                "inventory.html",
+                "inventory/inventory.html",
                 inventory=inventory,
                 values=values,
                 keys=keys,
@@ -158,7 +158,7 @@ def inventory(name):
                 flash('Inventory modified!', category='success')
             else:
                 flash('Nothing has been modified!', category='info')
-            return redirect(url_for('views.home'))
+            return redirect(url_for('inventory_bp.home'))
     if request.method == 'DELETE':
         data = json.loads(request.data) # add data in a python dict
         inventory_id = data['inventoryId']
@@ -169,7 +169,7 @@ def inventory(name):
                 db.session.commit()
         return jsonify({})
 
-    redirect(url_for('views.home'))
+    redirect(url_for('inventory_bp.home'))
 
 def csv_to_table(csv):
     pass

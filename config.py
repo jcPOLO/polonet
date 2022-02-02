@@ -28,7 +28,11 @@ CSRF_SESSION_KEY = "secret"
 SECRET_KEY = "secret"
 
 # Upload csv folder
-UPLOAD_FOLDER = f'{BASE_DIR}/app/website/static/uploads/'
+UPLOAD_FOLDER = f'{BASE_DIR}/app/static/uploads/'
 
 # Inventory file name
 INVENTORY_FILE = 'inventory.csv'
+
+# It will instruct Flask to print out the steps it goes through to 
+# locate templates on every render_template call.
+EXPLAIN_TEMPLATE_LOADING = True

@@ -8,18 +8,18 @@ from flask_login import (
 )
 from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
-from . import db
+from app import db
 from .forms import LoginForm, SingupForm
 
 
-auth = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth_bp', __name__, template_folder='templates')
 
 
-@auth.route('/login/callback', methods=['GET', 'POST'])
+@auth_bp.route('/login/callback', methods=['GET', 'POST'])
 def callback():
     pass
 
-@auth.route('/login', methods=['GET', 'POST'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -33,22 +33,22 @@ def login():
                 next = request.args.get('next')
                 # if not is_safe_url(next):
                 #     return flask.abort(400)
-                return redirect(next or url_for('views.home'))
+                return redirect(next or url_for('inventory_bp.home'))
 
             else:
                 flash('Incorrect user password combination.', category='error')
         else:
             flash('Incorrect user password combination.', category='error')
     form.flash_errors()
-    return render_template("login.html", user=current_user, form=form)
+    return render_template("auth/login.html", user=current_user, form=form)
 
-@auth.route('/logout')
+@auth_bp.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('auth_bp.login'))
 
-@auth.route('/sign-up', methods=['GET', 'POST'])
+@auth_bp.route('/sign-up', methods=['GET', 'POST'])
 def sing_up():
     form = SingupForm()
     if form.validate_on_submit():
@@ -71,6 +71,6 @@ def sing_up():
             db.session.commit()
             login_user(new_user, remember=True)
             flash('Account created!', category='success')
-            return redirect(url_for('views.home'))
+            return redirect(url_for('inventory_bp.home'))
     form.flash_errors()
-    return render_template("sign_up.html", user=current_user, form=form)
+    return render_template("auth/sign_up.html", user=current_user, form=form)
