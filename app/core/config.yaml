@@ -2,9 +2,9 @@
 inventory:
   plugin: SimpleInventory
   options:
-    host_file: "core/inventory/hosts.yaml"
-    group_file: "core/inventory/groups.yaml"
-    defaults_file: "core/inventory/defaults.yaml"
+    host_file: "app/core/inventory/hosts.yaml"
+    group_file: "app/core/inventory/groups.yaml"
+    defaults_file: "app/core/inventory/defaults.yaml"
 runner:
   plugin: threaded
   options:
