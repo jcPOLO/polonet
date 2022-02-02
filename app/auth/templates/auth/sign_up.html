@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}
+Sing up
+{% endblock %}
+{% block content %}
+<h1>This is the sign up page</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <h3 align="center">Sign Up</h3>
+    <div class="form-group">
+        {{ form.email.label }}
+        {{ form.email(type="email", class="form-control", id="email", placeholder="Enter email" ) }}
+        {{ form.first_name.label }}
+        {{ form.first_name(type="firstName", class="form-control", id="firstName", placeholder="Enter first name")}}
+        {{ form.password1.label }}
+        {{ form.password1(class="form-control", id="password1", placeholder="Enter password" ) }}
+        {{ form.password2.label }}
+        {{ form.password2(class="form-control", id="password2", placeholder="Confirm password" ) }}
+    </div>
+    <br />
+    {{ form.submit(class="btn btn-primary", onclick="return validatePasswords()") }}
+</form>                 
+{% endblock %}
