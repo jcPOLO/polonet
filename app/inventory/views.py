@@ -8,7 +8,7 @@ from app.inventory.models import Inventory
 from werkzeug.utils import secure_filename
 from app.core.models.bootstrap import Bootstrap
 from app.core.models.device import Device
-from app.core.helpers import configure_logging, dir_path
+from app.core.helpers import configure_logging, dir_path, json_to_csv
 from nornir import InitNornir
 from .forms import InventoryForm
 from app.core.exceptions import ValidationException
@@ -34,6 +34,15 @@ def home():
     form = InventoryForm()
     if form.validate_on_submit():
         inventory = form.inventory.data
+        try:
+            inventory = Bootstrap.import_inventory_text(inventory)
+            inventory = json_to_csv(inventory)
+        except ValidationException as e:
+            flash(f'{e.message}', category='error')
+            return redirect(url_for('inventory_bp.home'))
+        except AttributeError:
+            flash('Bad inventory', category='error')
+            return redirect(url_for('inventory_bp.home'))
         name = form.name.data
         inventory_exists = Inventory.query.filter_by(data=inventory, user_id=current_user.id).first() 
         name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
@@ -43,14 +52,6 @@ def home():
             if len(inventory) < 1 or name=='':
                 flash('Inventory does not have name or is empty', category='error')
             else:
-                try:
-                    inventory = Bootstrap.import_inventory_text(inventory)
-                except ValidationException as e:
-                    flash(f'{e.message}', category='error')
-                    return redirect(url_for('inventory_bp.home'))
-                except AttributeError:
-                    flash('Bad inventory', category='error')
-                    return redirect(url_for('inventory_bp.home'))
                 new_inventory = Inventory(
                     name=name,
                     data=inventory, 
@@ -107,37 +108,6 @@ def upload_file():
             flash('File type must be csv or txt', category='error')
     return redirect(url_for('inventory_bp.home'))
 
-@inventory_bp.route('/auto-nornir', methods=['POST', 'GET'])
-@login_required
-def auto_nornir():
-    if request.method == 'GET':
-        # configure logger
-        configure_logging(logger)
-
-        # creates hosts.yaml from csv file, ini file could be passed as arg,
-        # by default .global.ini
-        bootstrap = Bootstrap()
-        bootstrap.load_inventory()
-
-        # initialize Nornir object
-        nr = InitNornir(config_file=CFG_FILE)
-
-        custom_keys = Device.get_devices_data_keys()
-        print(custom_keys)
-
-        devices = nr.inventory.hosts
-
-        logger.info('----------- LOADING -----------\n')
-
-
-        return render_template(
-            "inventory/filter.html", 
-            user=current_user, 
-            devices=devices,
-            custom_keys=custom_keys,
-        )
-
-
 @inventory_bp.route('/inventory/<name>', methods=['POST', 'GET', 'DELETE'])
 @login_required
 def inventory(name):
@@ -147,13 +117,15 @@ def inventory(name):
             # get Device.__iter__() dict for every device in a dict container.
             values = Bootstrap.import_inventory_text(inventory.data)
             # get first dict element keys.
-            keys = list(values.values())[0].keys()
+            keys = values[0].keys()
+            json_data = json.dumps(values)
             return render_template(
                 "inventory/inventory.html",
                 inventory=inventory,
                 values=values,
                 keys=keys,
-                user=current_user
+                user=current_user,
+                json_data=json_data
             )
     if request.method == 'POST':
         inventory = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
@@ -165,7 +137,7 @@ def inventory(name):
                 flash('Inventory modified!', category='success')
             else:
                 flash('Nothing has been modified!', category='info')
-            return redirect(url_for('inventory_bp.home'))
+            return redirect(url_for('inventory_bp.inventory', name=name))
     if request.method == 'DELETE':
         data = json.loads(request.data) # add data in a python dict
         inventory_id = data['inventoryId']
@@ -180,3 +152,50 @@ def inventory(name):
 
 def csv_to_table(csv):
     pass
+
+@inventory_bp.route('/v1/inventory/<name>', methods=['POST', 'GET', 'DELETE', 'UPDATE'])
+@login_required
+def inventory_api(name):
+    print('aqui si') 
+    if request.method == 'GET':
+        print('entra')
+        inventory = Inventory.query.filter_by(name=name, user_id=current_user.id).first() 
+        if inventory:
+            # get Device.__iter__() dict for every device in a dict container.
+            values = Bootstrap.import_inventory_text(inventory.data)
+            json_data = json.dumps(values)
+            return json_data
+    if request.method == 'UPDATE':
+        data = json.loads(request.data) # add data in a python dict
+        data = json_to_csv(list(data))
+        inventory = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
+        if inventory:
+            if inventory.user_id == current_user.id:
+                if inventory.data != data:
+                    inventory.data = data
+                    db.session.commit()
+                    flash('Inventory modified!', category='success')
+                else:
+                    flash('Nothing has been modified!', category='info')
+    if request.method == 'POST':
+        inventory = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
+        if inventory:
+            data = request.form.get('data')
+            if inventory.data != data:
+                inventory.data = data
+                db.session.commit()
+                flash('Inventory modified!', category='success')
+            else:
+                flash('Nothing has been modified!', category='info')
+            return inventory.data, 200
+    if request.method == 'DELETE':
+        data = json.loads(request.data) # add data in a python dict
+        inventory_id = data['inventoryId']
+        inventory = Inventory.query.get(inventory_id)
+        if inventory:
+            if inventory.user_id == current_user.id:
+                db.session.delete(inventory)
+                db.session.commit()
+        return jsonify({})
+
+    redirect(url_for('inventory_bp.home'))

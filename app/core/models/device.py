@@ -114,5 +114,8 @@ class Device(object):
                 if k == 'data':
                     for a, b in self._device_dict()[k].items():
                         yield a, b
+                # do not return groups column either
+                elif k == 'groups':
+                    pass
                 else:
                     yield k, v

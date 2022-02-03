@@ -88,10 +88,10 @@ class Bootstrap(object):
         with open(filename, 'w') as f:
             f.write(yml)
 
-    # Return a dictionary from imported csv file
+    # Return a list of dicts from imported csv file
     @classmethod
     def import_inventory_text(cls, csv_data) -> dict:
-        result = {}
+        result = []
         devices = {}
         csv_reader = DictReader(io.StringIO(csv_data))
         fields = 'hostname'
@@ -107,6 +107,6 @@ class Bootstrap(object):
             message = '{} not in csv header'.format(fields)
             logger.error(message)
             raise ValidationException("fail-config", message)
-        for h, n in devices.items():
-            result[h] = dict(n)
+        for _, n in devices.items():
+            result.append(dict(n))
         return result

@@ -35,4 +35,4 @@ INVENTORY_FILE = 'inventory.csv'
 
 # It will instruct Flask to print out the steps it goes through to 
 # locate templates on every render_template call.
-EXPLAIN_TEMPLATE_LOADING = True
+# EXPLAIN_TEMPLATE_LOADING = True

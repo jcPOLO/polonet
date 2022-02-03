@@ -111,3 +111,21 @@ class HumanBytes:
                 num /= unit_step
 
         return HumanBytes.PRECISION_FORMATS[precision].format("-" if is_negative else "", num, unit)
+
+# TODO: This is not good at all. Only works on not nested jsons
+def json_to_csv(js):
+    csv = []
+    keys = []
+    for key in js[0].keys():
+        keys.append(key)
+    for host in js:
+        for key in keys:
+            if key != 'groups':
+                csv.append(str(host[key]))
+                csv.append(',')
+        csv.pop()
+        csv.append('\n')
+
+    csv = ''.join(csv)
+    keys = ','.join(keys) + '\n'
+    return keys + csv
