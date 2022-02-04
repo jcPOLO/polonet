@@ -11,33 +11,6 @@ Home
         <button type="submit" class="btn btn-primary">Modify inventory</button>
     </div>
 </form>
-<button onclick="getSelectedRows('{{ inventory.name }}')">Get Selected Rows</button>
-<div id="myGrid" class="ag-theme-alpine" style="width: 100;"></div>
-<script type="text/javascript" charset="utf-8">
-   // specify the columns
-   const columnDefs = [];
-   // specify the data
-   const rowData = [];
-   // let the grid know which columns and what data to use
-   const gridOptions = {
-       columnDefs: columnDefs,
-       rowData: rowData,
-       domLayout: 'autoHeight',
-       rowSelection: 'multiple'
-   };
-   // lookup the container we want the Grid to use
-   const eGridDiv = document.querySelector('#myGrid');
-   // create the grid passing in the div to use together with the columns & data we want to use
-   new agGrid.Grid(eGridDiv, gridOptions);
-   // fetch the row data to use and one ready provide it to the Grid via the Grid API
-   fetch('/v1/inventory/{{ inventory.name }}', {
-       method: 'GET',
-       credentials: 'include',
-   })
-   .then(response => response.json())
-   .then(data => {
-       gridOptions.api.setColumnDefs(getColDefs(data));
-       gridOptions.api.setRowData(data);
-   });
-</script>
+<button onclick="inventoryTable.getSelectedRows()">Get Selected Rows</button>
+<div id="myGrid" class="ag-theme-alpine" style="width: 100;" name="{{ inventory.name }}"></div>
 {% endblock %}

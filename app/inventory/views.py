@@ -153,7 +153,7 @@ def inventory(name):
 def csv_to_table(csv):
     pass
 
-@inventory_bp.route('/v1/inventory/<name>', methods=['POST', 'GET', 'DELETE', 'UPDATE'])
+@inventory_bp.route('/v1/inventory/<name>', methods=['POST', 'GET', 'DELETE', 'PUT'])
 @login_required
 def inventory_api(name):
     print('aqui si') 
@@ -165,7 +165,7 @@ def inventory_api(name):
             values = Bootstrap.import_inventory_text(inventory.data)
             json_data = json.dumps(values)
             return json_data
-    if request.method == 'UPDATE':
+    if request.method == 'PUT':
         data = json.loads(request.data) # add data in a python dict
         data = json_to_csv(list(data))
         inventory = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
