@@ -4,6 +4,7 @@ import errno
 import logging
 import sys
 from typing import List, Union
+import csv, io, json
 
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -128,4 +129,10 @@ def json_to_csv(js):
 
     csv = ''.join(csv)
     keys = ','.join(keys) + '\n'
-    return keys + csv
+    csv_text = keys + csv
+    return csv_text
+
+def csv_to_json(csv_text):
+    reader = csv.DictReader(io.StringIO(csv_text))
+    json_data = json.dumps(list(reader))
+    return json_data

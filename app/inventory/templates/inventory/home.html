@@ -13,20 +13,19 @@ Home
 </ul>
 <br />
 <form method="POST">
-    {{ form.hidden_tag() }}
-    {{ form.name.label }} {{ form.name() }}
-    {{ form.inventory(class="form-control") }}
+    {{ inventory_form.hidden_tag() }}
+    {{ inventory_form.name.label }} {{ inventory_form.name() }}
+    {{ inventory_form.inventory(class="form-control") }}
     <br />
     <div align="center">
-        {{ form.submit(class="btn btn-primary") }}
+        {{ inventory_form.submit(class="btn btn-primary") }}
     </div>
 </form>
 <br />
-<div class="mb-3">
-    <form  action="/upload" method="POST" enctype="multipart/form-data">
-        <label for="formFile" class="form-label">Add your inventory</label>
-        <input class="form-control" type="file" id="formFile" name="file">
-        <input type="submit" class="btn btn-primary" value="Upload">
-    </form>
-</div>
+<form method="POST" enctype="multipart/form-data">
+    {{ upload_form.hidden_tag() }}
+    {{ upload_form.file.label }}
+    {{ upload_form.file(class="form-control") }}
+    {{ upload_form.submit(class="btn btn-primary") }}
+</form>
 {% endblock %}
