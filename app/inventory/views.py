@@ -34,6 +34,8 @@ def home():
     # POST de csv textArea
     if inventory_form.validate_on_submit():
         inventory = inventory_form.inventory.data
+        name = inventory_form.name.data
+
         try:
             # Validate data with Device model and return a list of Device __iter__() dicts.
             inventory = Bootstrap.import_inventory_text(inventory)
@@ -45,7 +47,6 @@ def home():
         except AttributeError:
             flash('Bad inventory', category='error')
             return redirect(url_for('inventory_bp.home'))
-        name = inventory_form.name.data
         inventory_exists = Inventory.query.filter_by(data=inventory_csv, user_id=current_user.id).first() 
         name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
         if inventory_exists or name_exists:
@@ -70,8 +71,6 @@ def home():
     # POST de upload csv
     elif upload_form.validate_on_submit():
         filename = secure_filename(upload_form.file.data.filename)
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
         if filename == '':
             flash("You haven't selected any file", category='warning')
             return redirect(request.url)
@@ -80,25 +79,41 @@ def home():
                 current_app.config['UPLOAD_FOLDER'], 
                 current_app.config['INVENTORY_FILE'])
             upload_form.file.data.save(final_filename)
-            
             with open(final_filename) as f:
                 inventory = f.read()
             name = filename
-            inventory_name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
-            if inventory_name_exists:
+            
+            try:
+                # Validate data with Device model and return a list of Device __iter__() dicts.
+                inventory = Bootstrap.import_inventory_text(inventory)
+                # Convert to csv this json-like list
+                inventory_csv = json_to_csv(inventory)
+            except ValidationException as e:
+                flash(f'{e.message}', category='error')
+                return redirect(url_for('inventory_bp.home'))
+            except AttributeError:
+                flash('Bad inventory', category='error')
+                return redirect(url_for('inventory_bp.home'))
+            inventory_exists = Inventory.query.filter_by(data=inventory_csv, user_id=current_user.id).first() 
+            name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
+            if inventory_exists or name_exists:
                 flash('Inventory already exists!', category='error')
             else:
-                if len(inventory) < 1:
-                    flash('Inventory does not have enougth text', category='error')
+                if len(inventory_csv) < 1 or name=='':
+                    flash('Inventory does not have name or is empty', category='error')
                 else:
                     new_inventory = Inventory(
                         name=name,
-                        data=inventory, 
+                        data=inventory_csv, 
                         user_id=current_user.id
                     )
+                    for device in inventory:
+                        # TODO: only allows predefined DB attributes. Need to pass a JSON object in custom field por non-predefined attrb.
+                        d,_ = Device.get_or_create(db.session, **device)
+                        new_inventory.devices.append(d)
                     db.session.add(new_inventory)
                     db.session.commit()
-                    flash('File uploaded', category='success')
+                    flash('File uploaded!', category='success')
                     return redirect(url_for('inventory_bp.home'))
         else:
             flash('File type must be csv or txt', category='error')
