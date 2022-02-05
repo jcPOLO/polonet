@@ -3,6 +3,7 @@ import os
 import logging
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from flask_login import login_required, current_user
+import sqlalchemy
 from app import db
 from app.inventory.models import Inventory
 from app.inventory.models import Device
@@ -18,13 +19,53 @@ inventory_bp = Blueprint('inventory_bp', __name__, template_folder='templates')
 logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = {'txt', 'csv'}
-
+DEFAULT_ATTR = ['hostname','port','platform', 'custom']
 CFG_FILE = f'{dir_path}/config.yaml'
 
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Check if it exists if not create it after validate its attributes.
+def create_inventory(name, inventory, msg):
+    try:
+        # Validate data with Device model and return a list of Device __iter__() dicts.
+        inventory = Bootstrap.import_inventory_text(inventory)
+        # Convert to csv this json-like list
+        inventory_csv = json_to_csv(inventory)
+    except ValidationException as e:
+        flash(f'{e.message}', category='error')
+        return redirect(url_for('inventory_bp.home'))
+    except AttributeError:
+        flash('Bad inventory', category='error')
+        return redirect(url_for('inventory_bp.home'))
+    inventory_exists = Inventory.query.filter_by(data=inventory_csv, user_id=current_user.id).first() 
+    name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
+    if inventory_exists or name_exists:
+        flash('Inventory already exists!', category='error')
+    else:
+        if len(inventory_csv) < 1 or name=='':
+            flash('Inventory does not have name or is empty', category='error')
+        else:
+            new_inventory = Inventory(
+                name=name,
+                data=inventory_csv, 
+                user_id=current_user.id
+            )
+            for device in inventory:
+                try:
+                    d,_ = Device.get_or_create(db.session, **device)
+                except sqlalchemy.exc.InvalidRequestError as e:
+                    custom = {k:v for k,v in device.items() if k not in DEFAULT_ATTR}
+                    device = {k:v for k,v in device.items() if k in DEFAULT_ATTR}
+                    device['custom'] = json.dumps(custom)
+                    d,_ = Device.get_or_create(db.session, **device)
+                new_inventory.devices.append(d)
+            db.session.add(new_inventory)
+            db.session.commit()
+            flash(f'{msg}', category='success')
+            return redirect(url_for('inventory_bp.home'))
 
 @inventory_bp.route('/', methods=['GET', 'POST'])
 @login_required
@@ -35,39 +76,8 @@ def home():
     if inventory_form.validate_on_submit():
         inventory = inventory_form.inventory.data
         name = inventory_form.name.data
-
-        try:
-            # Validate data with Device model and return a list of Device __iter__() dicts.
-            inventory = Bootstrap.import_inventory_text(inventory)
-            # Convert to csv this json-like list
-            inventory_csv = json_to_csv(inventory)
-        except ValidationException as e:
-            flash(f'{e.message}', category='error')
-            return redirect(url_for('inventory_bp.home'))
-        except AttributeError:
-            flash('Bad inventory', category='error')
-            return redirect(url_for('inventory_bp.home'))
-        inventory_exists = Inventory.query.filter_by(data=inventory_csv, user_id=current_user.id).first() 
-        name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
-        if inventory_exists or name_exists:
-            flash('Inventory already exists!', category='error')
-        else:
-            if len(inventory_csv) < 1 or name=='':
-                flash('Inventory does not have name or is empty', category='error')
-            else:
-                new_inventory = Inventory(
-                    name=name,
-                    data=inventory_csv, 
-                    user_id=current_user.id
-                )
-                for device in inventory:
-                    # TODO: only allows predefined DB attributes. Need to pass a JSON object in custom field por non-predefined attrb.
-                    d,_ = Device.get_or_create(db.session, **device)
-                    new_inventory.devices.append(d)
-                db.session.add(new_inventory)
-                db.session.commit()
-                flash('Inventory created!', category='success')
-                return redirect(url_for('inventory_bp.home'))
+        # validate data and submit to db
+        create_inventory(name, inventory, f'Inventory {name} created!')
     # POST de upload csv
     elif upload_form.validate_on_submit():
         filename = secure_filename(upload_form.file.data.filename)
@@ -82,39 +92,8 @@ def home():
             with open(final_filename) as f:
                 inventory = f.read()
             name = filename
-            
-            try:
-                # Validate data with Device model and return a list of Device __iter__() dicts.
-                inventory = Bootstrap.import_inventory_text(inventory)
-                # Convert to csv this json-like list
-                inventory_csv = json_to_csv(inventory)
-            except ValidationException as e:
-                flash(f'{e.message}', category='error')
-                return redirect(url_for('inventory_bp.home'))
-            except AttributeError:
-                flash('Bad inventory', category='error')
-                return redirect(url_for('inventory_bp.home'))
-            inventory_exists = Inventory.query.filter_by(data=inventory_csv, user_id=current_user.id).first() 
-            name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
-            if inventory_exists or name_exists:
-                flash('Inventory already exists!', category='error')
-            else:
-                if len(inventory_csv) < 1 or name=='':
-                    flash('Inventory does not have name or is empty', category='error')
-                else:
-                    new_inventory = Inventory(
-                        name=name,
-                        data=inventory_csv, 
-                        user_id=current_user.id
-                    )
-                    for device in inventory:
-                        # TODO: only allows predefined DB attributes. Need to pass a JSON object in custom field por non-predefined attrb.
-                        d,_ = Device.get_or_create(db.session, **device)
-                        new_inventory.devices.append(d)
-                    db.session.add(new_inventory)
-                    db.session.commit()
-                    flash('File uploaded!', category='success')
-                    return redirect(url_for('inventory_bp.home'))
+             # validate data and submit to db
+            create_inventory(name, inventory, f'File {name} uploaded!')
         else:
             flash('File type must be csv or txt', category='error')
     # GET

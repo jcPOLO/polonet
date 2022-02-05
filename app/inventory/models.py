@@ -15,7 +15,7 @@ class Inventory(Base):
 
 
 class Device(Base):
-    hostname = db.Column(db.String(150), unique=True)
+    hostname = db.Column(db.String(150))
     platform = db.Column(db.String(150))
     port = db.Column(db.Integer)
     custom = db.Column(db.JSON)
