@@ -8,8 +8,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 import sqlalchemy
 from app import db
-from app.inventory.models import Inventory
-from app.inventory.models import Device
+from app.inventory.models import Device, DeviceSchema, Inventory
 from werkzeug.utils import secure_filename
 from app.core.models.bootstrap import Bootstrap
 from app.core.helpers import configure_logging, dir_path, json_to_csv
@@ -85,6 +84,42 @@ def csv_text_to_devices_db(devices: str) -> List:
         device['custom'] = json.dumps(customs) # aqui device es un dict preparado para subir por SQL
         result.append(device) 
     return result # lista de devices SQL
+
+def devices_db_dict_to_csv_text(devices: List[Dict]) -> str:
+    def generator(device: dict) -> str:
+        for k, v in device.items():
+                # remove empty attributes
+                if v:
+                    # custom keys inside data are shown, data key is not shown.
+                    if k == 'custom':
+                        if device[k] != 'None':
+                            for a, b in device[k].items():
+                                yield a, b
+                        else:
+                            pass
+                    # do not return groups column either
+                    elif k in OMITTED_DEVICE_ATTR:
+                        pass
+                    else:
+                        yield k, v
+    result = []
+    # This line converts a device SQLAlchemi object row to device dict.
+    row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
+    # Gets a List of device dictionaries
+    devices  = [row2dict(device) for device in devices]
+    for device in devices:
+        if 'custom' in device.keys():
+            if device['custom'] != 'None':
+                device['custom'] = json.loads(device['custom'])
+        result.append({k:v for k,v in generator(device)})
+    devices = result
+    file = io.StringIO()
+    keys = devices.keys() if type(devices) != list else devices[0].keys()
+    dict_writer = csv.DictWriter(file, fieldnames=keys)
+    dict_writer.writeheader()
+    dict_writer.writerows([devices]) if type(devices) != list else dict_writer.writerows(devices)
+    output = file.getvalue()
+    return output
 
 def devices_db_dict_to_csv_text(devices: List[Dict]) -> str:
     def generator(device: dict) -> str:
@@ -241,13 +276,20 @@ def inventory_api(name):
 
     redirect(url_for('inventory_bp.home'))
 
-@inventory_bp.route('/v1/device/', methods=['POST', 'GET', 'DELETE', 'PUT'])
+@inventory_bp.route('/v1/device/<id>', methods=['POST', 'GET', 'DELETE', 'PUT'])
 @login_required
-def device():
+def device(id):
     if request.method == 'PUT':
+        device_schema = DeviceSchema()
         data = json.loads(request.data) # add data in a python dict
-        print(data)
-        return jsonify({})
+        data = device_schema.load(data)
+        device = Device.query.filter_by(id=id).first()
+        device = db.session.merge(Device(**data))
+        db.session.commit()
+        device = device_schema.dump(device)
+        print(device)
+
+        return jsonify(device)
         data = json_to_csv(list(data))
         device = Device.query.filter_by(data, user_id=current_user.id).first()
         if inventory:

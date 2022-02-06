@@ -106,7 +106,7 @@ class Device(object):
             'data': self.data
         }
 
-    def __iter__(self):
+    def no_groups(self):
         for k, v in self._device_dict().items():
             # remove empty attributes
             if v:
@@ -117,5 +117,19 @@ class Device(object):
                 # do not return groups column either
                 elif k == 'groups':
                     pass
+                else:
+                    yield k, v
+
+    def __iter__(self):
+        for k, v in self._device_dict().items():
+            # remove empty attributes
+            if v:
+                # custom keys inside data are shown, data key is not shown.
+                if k == 'data':
+                    for a, b in self._device_dict()[k].items():
+                        yield a, b
+                # do not return groups column either
+                # elif k == 'groups':
+                #     pass
                 else:
                     yield k, v

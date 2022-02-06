@@ -3,9 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_marshmallow import Marshmallow
 
 
 db = SQLAlchemy() 
+ma = Marshmallow()
 
 
 def create_app():
@@ -15,6 +17,7 @@ def create_app():
     migrate = Migrate(app, db)
 
     db.init_app(app)
+    ma.init_app(app)
 
     from app.inventory.views import inventory_bp
     from app.auth.views import auth_bp

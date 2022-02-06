@@ -50,31 +50,6 @@ class Bootstrap(object):
             config.read(self.ini_file)
             return config
 
-    # Return a dictionary from imported csv file
-    def import_inventory_file(self) -> dict:
-        result = {}
-        devices = {}
-
-        with open(self.csv_file, 'r', encoding=self.encoding) as csv_file:
-            csv_reader = DictReader(csv_file)
-            fields = 'hostname'
-            csv_fields = set(csv_reader.fieldnames)
-            self.data_keys = csv_fields
-            wrong_headers = False if fields in csv_fields else True
-            if not wrong_headers:
-                # create dict of Devices from CSV
-                for row in csv_reader:
-                    hostname = row['hostname'].strip()
-                    if hostname not in devices.keys():
-                        devices[hostname] = Device(**row)
-            else:
-                message = '{} not in csv header'.format(wrong_headers)
-                logger.error(message)
-                raise ValidationException("fail-config", message)
-            for h, n in devices.items():
-                result[h] = n.__dict__
-            return result
-
     def load_inventory(self) -> None:
         self.create_hosts_yaml(self.import_inventory_file())
 
@@ -88,14 +63,30 @@ class Bootstrap(object):
         with open(filename, 'w') as f:
             f.write(yml)
 
+    # Return a dictionary from imported csv file
+    def import_inventory_file(self) -> dict:
+        result = {}
+        with open(self.csv_file, 'r', encoding=self.encoding) as csv_file:
+            devices = self.get_devices(csv_file)
+            for h, n in devices.items():
+                result[h] = dict(n)
+            return result
+
     # Return a list of dicts from imported csv file
     @classmethod
-    def import_inventory_text(cls, csv_data) -> dict:
+    def import_inventory_text(cls,csv_file) -> dict:
         result = []
+        devices = cls.get_devices(cls,io.StringIO(csv_file))
+        for _, n in devices.items():
+            result.append({k:v for k,v in n.no_groups()})
+        return result
+
+    def get_devices(cls, csv_file):
         devices = {}
-        csv_reader = DictReader(io.StringIO(csv_data))
+        csv_reader = DictReader(csv_file)
         fields = 'hostname'
         csv_fields = set(csv_reader.fieldnames)
+        cls.data_keys = csv_fields
         wrong_headers = False if fields in csv_fields else True
         if not wrong_headers:
             # create dict of Devices from CSV
@@ -103,10 +94,8 @@ class Bootstrap(object):
                 hostname = row['hostname'].strip()
                 if hostname not in devices.keys():
                     devices[hostname] = Device(**row)
+            return devices
         else:
             message = '{} not in csv header'.format(fields)
             logger.error(message)
             raise ValidationException("fail-config", message)
-        for _, n in devices.items():
-            result.append(dict(n))
-        return result

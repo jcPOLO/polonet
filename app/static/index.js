@@ -1,5 +1,7 @@
 // InventoryTable class. 
 // It does all ralted tasks for ag-grid table framekwork and it has all its config.
+HIDDEN_DEVICE_ATTR = ['id','date_created','date_modified'];
+
 class InventoryTable {
 
     constructor(inventoryName) {
@@ -17,7 +19,15 @@ class InventoryTable {
             rowDragManaged: true,
             animateRows: true,
             rowDragMultiRow: true,
-            
+            onFirstDataRendered: this.onFirstDataRendered,
+            defaultColDef: {
+                resizable: true,
+                sortable: true, 
+                filter: true,
+                editable: true,
+                // must bind or this is lost and becomes undefined.
+                onCellValueChanged: this.onCellValueChanged.bind(this) 
+            }
         };
         // lookup the container we want the Grid to use
         this.eGridDiv = document.querySelector('#myGrid');
@@ -32,25 +42,34 @@ class InventoryTable {
             if (key == 'hostname') {
                 colDefs.push({
                     field : key,
-                    sortable: true, 
-                    filter: true,
                     checkboxSelection: false,
-                    editable: true,
+                    width: 170,
                     rowDrag: true,
-                    onCellValueChanged: this.onCellValueChanged.bind(this) // must bind or this is lost and becomes undefined.
+                })
+            } else if (['port','platform'].includes(key)) {
+                colDefs.push({
+                    field: key,
+                    width: 110,
+                })
+            } else if (HIDDEN_DEVICE_ATTR.includes(key)) {
+                colDefs.push({
+                    field: key,
+                    hide: true,
+                    suppressToolPanel: true
                 })
             } else {
                 colDefs.push({
                     field : key,
-                    sortable: true, 
-                    filter: true,
-                    editable: true,
-                    onCellValueChanged: this.onCellValueChanged.bind(this) // must bind or this is lost and becomes undefined.
+                    width: 150,
                 });
             }
         });
         return colDefs
     };
+
+    onFirstDataRendered(params) {
+        params.api.sizeColumnsToFit();
+      }
 
     // Creates the table and populates the data from the backend API.
     createInventoryTable() {
@@ -79,10 +98,8 @@ class InventoryTable {
     onCellValueChanged(params) {
         let changedData = [params.data];
         params.api.applyTransaction({ update: changedData });
-        print(params.data)
-        console.log(params)
-        //return this.updateInventory(changedData)
-        
+        const id = changedData[0].id
+        return this.updateDevice(id, changedData[0])
     };
 
     // TODO: Need to only update/refresh the attributed changed. 
@@ -96,8 +113,8 @@ class InventoryTable {
         });
     };
 
-    updateDevice(data=[]) {
-        fetch('/v1/device/', {
+    updateDevice(id, data=[]) {
+        fetch('/v1/device/' + id, {
             method: 'PUT',
             credentials: 'include',
             body: JSON.stringify(data)
