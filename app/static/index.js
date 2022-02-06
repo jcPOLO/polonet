@@ -14,6 +14,10 @@ class InventoryTable {
             rowData: this.rowData,
             rowSelection: 'multiple',
             domLayout: 'autoHeight',
+            rowDragManaged: true,
+            animateRows: true,
+            rowDragMultiRow: true,
+            
         };
         // lookup the container we want the Grid to use
         this.eGridDiv = document.querySelector('#myGrid');
@@ -32,6 +36,7 @@ class InventoryTable {
                     filter: true,
                     checkboxSelection: false,
                     editable: true,
+                    rowDrag: true,
                     onCellValueChanged: this.onCellValueChanged.bind(this) // must bind or this is lost and becomes undefined.
                 })
             } else {
@@ -74,13 +79,25 @@ class InventoryTable {
     onCellValueChanged(params) {
         let changedData = [params.data];
         params.api.applyTransaction({ update: changedData });
-        return this.updateInventory(changedData)
+        print(params.data)
+        console.log(params)
+        //return this.updateInventory(changedData)
         
     };
 
     // TODO: Need to only update/refresh the attributed changed. 
     updateInventory(data=[]) {
         fetch('/v1/inventory/'+ this.inventoryName, {
+            method: 'PUT',
+            credentials: 'include',
+            body: JSON.stringify(data)
+        }).then((_res) => {
+            window.location.href = '/inventory/'+ this.inventoryName;
+        });
+    };
+
+    updateDevice(data=[]) {
+        fetch('/v1/device/', {
             method: 'PUT',
             credentials: 'include',
             body: JSON.stringify(data)
