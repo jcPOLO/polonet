@@ -5,14 +5,27 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_marshmallow import Marshmallow
 
-
 db = SQLAlchemy() 
 ma = Marshmallow()
+login_manager = LoginManager()
 
 
-def create_app():
+def create_app(test=False, db_fd=None, db_path=None):
     app = Flask(__name__)
-    app.config.from_object('config')
+    if test == True:
+        # load the test config if passed in
+        app.config.from_object('tests.config_test')
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+        app.config['DB_NAME'] = path.basename(db_path)
+    elif test == 'no_csrf':
+        # load the test config if passed in
+        app.config.from_object('tests.config_test')
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+        app.config['DB_NAME'] = path.basename(db_path)
+        app.config['WTF_CSRF_ENABLED'] = False
+    else:
+        # load the instance config, if it exists, when not testing
+        app.config.from_object('config')
 
     migrate = Migrate(app, db)
 
@@ -27,9 +40,6 @@ def create_app():
 
     from app.auth.models import User
 
-    create_database(app)
-
-    login_manager = LoginManager()
     login_manager.login_view = 'auth_bp.login'
     login_manager.init_app(app)
 
@@ -44,7 +54,11 @@ def create_app():
     @app.errorhandler(404)
     def not_found(error):
         return render_template('404.html'), 404
+        
+    if test:
+        return app
 
+    create_database(app)
     return app
 
 
@@ -53,4 +67,3 @@ def create_database(app):
         path.join(app.config['BASE_DIR'], app.config['DB_NAME'])
     ):
         db.create_all(app=app)
-        print('Created Database')

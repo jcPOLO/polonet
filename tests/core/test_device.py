@@ -1,5 +1,5 @@
 import pytest
-from app import Device
+from app.core.models.device import Device
 from app.core.exceptions import ValidationException
 
 
@@ -126,9 +126,7 @@ def test_get_devices_data_keys_and__dict__():
         "hostname": '1.1.1.1',
         "platform": 'ios',
         "port": 22,
-        "data": {
-            "serial_number": '12345',
-            'site': 'zaragoza'
-        },
+        "serial_number": '12345',
+        'site': 'zaragoza',
         "groups": ['ios']
     }

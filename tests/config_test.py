@@ -1,15 +1,20 @@
+# Say it is TEST environment
+TESTING = True
+
 # Statement for enabling the development environment
 DEBUG = True
 
 # Define the application directory (like doing a pwd)
 import os
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))  
+BASE_DIR = os.path.abspath(os.path.dirname('config.py'))
 
 # Define the database - we are working with
 # SQLite for this example
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'app.db')
+# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_path
+# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + BASE_DIR + '/test.db'
 DATABASE_CONNECT_OPTIONS = {}
-DB_NAME = "app.db"
+# DB_NAME = os.path.basename(db_path)
+# DB_NAME = 'test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Application threads. A common general assumption is
@@ -18,8 +23,12 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 # operations using the other.
 THREADS_PER_PAGE = 2
 
+# # Enable CSRF WTF (by default, True)
+# WTF_CSRF_ENABLED = True
+
 # Enable protection agains *Cross-site Request Forgery (CSRF)*
-CSRF_ENABLED     = True
+# Disabled for testing
+CSRF_ENABLED     = False
 
 # Use a secure, unique and absolutely secret key for
 # signing the data. 
