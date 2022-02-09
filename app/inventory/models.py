@@ -38,6 +38,7 @@ class Device(Base):
     custom = db.Column(db.JSON)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id")) # 1:N
 
+
 class DeviceSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Device

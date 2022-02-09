@@ -10,7 +10,7 @@ ma = Marshmallow()
 login_manager = LoginManager()
 
 
-def create_app(test=False, db_fd=None, db_path=None):
+def create_app(test=False, db_path=None):
     app = Flask(__name__)
     if test == True:
         # load the test config if passed in

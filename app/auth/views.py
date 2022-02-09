@@ -29,7 +29,7 @@ def login():
         if user:
             if check_password_hash(user.password, password):
                 login_user(user, remember=True)
-                flash('Logged in sucessfully!', category='success')
+                flash('Logged in successfully!', category='success')
                 next = request.args.get('next')
                 # if not is_safe_url(next):
                 #     return flask.abort(400)
