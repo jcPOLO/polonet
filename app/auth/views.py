@@ -15,10 +15,6 @@ from .forms import LoginForm, SingupForm
 auth_bp = Blueprint('auth_bp', __name__, template_folder='templates')
 
 
-@auth_bp.route('/login/callback', methods=['GET', 'POST'])
-def callback():
-    pass
-
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -30,11 +26,7 @@ def login():
             if check_password_hash(user.password, password):
                 login_user(user, remember=True)
                 flash('Logged in successfully!', category='success')
-                next = request.args.get('next')
-                # if not is_safe_url(next):
-                #     return flask.abort(400)
-                return redirect(next or url_for('inventory_bp.home'))
-
+                return redirect(url_for('inventory_bp.home'))
             else:
                 flash('Incorrect user password combination.', category='error')
         else:
