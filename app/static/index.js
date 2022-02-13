@@ -4,8 +4,8 @@ HIDDEN_DEVICE_ATTR = ['id','date_created','date_modified'];
 
 class InventoryTable {
 
-    constructor(inventoryName) {
-        this.inventoryName = inventoryName;
+    constructor(inventorySlug) {
+        this.inventorySlug = inventorySlug;
         // specify the columns
         this.columnDefs = [];
         // specify the data
@@ -76,7 +76,7 @@ class InventoryTable {
         // create the grid passing in the div to use together with the columns & data we want to use
         const aGrid_object = new agGrid.Grid(this.eGridDiv, this.gridOptions);
         // fetch the row data to use and one ready provide it to the Grid via the Grid API
-        fetch('/v1/inventory/' + this.inventoryName, {
+        fetch('/v1/inventory/' + this.inventorySlug, {
             method: 'GET',
             credentials: 'include',
         })
@@ -104,12 +104,12 @@ class InventoryTable {
 
     // TODO: Need to only update/refresh the attributed changed. 
     updateInventory(data=[]) {
-        fetch('/v1/inventory/'+ this.inventoryName, {
+        fetch('/v1/inventory/'+ this.inventorySlug, {
             method: 'PUT',
             credentials: 'include',
             body: JSON.stringify(data)
         }).then((_res) => {
-            window.location.href = '/inventory/'+ this.inventoryName;
+            window.location.href = '/inventory/'+ this.inventorySlug;
         });
     };
 
@@ -119,7 +119,7 @@ class InventoryTable {
             credentials: 'include',
             body: JSON.stringify(data)
         }).then((_res) => {
-            window.location.href = '/inventory/'+ this.inventoryName;
+            window.location.href = '/inventory/'+ this.inventorySlug;
         });
     };
 };
@@ -140,16 +140,16 @@ if (document.readyState === "loading") {
     document.addEventListener('DOMContentLoaded', function () {
         const gridDiv = document.querySelector('#myGrid');
         if (gridDiv) {
-            const inventoryName = gridDiv.getAttribute("name")
-            inventoryTable = new InventoryTable(inventoryName);
+            const inventorySlug = gridDiv.getAttribute("name")
+            inventoryTable = new InventoryTable(inventorySlug);
             inventoryTable.createInventoryTable();
         }
       });
 } else {
     if (gridDiv) {
         const gridDiv = document.querySelector('#myGrid');
-        const inventoryName = gridDiv.getAttribute("name");
-        inventoryTable = new InventoryTable(inventoryName);
+        const inventorySlug = gridDiv.getAttribute("name");
+        inventoryTable = new InventoryTable(inventorySlug);
         inventoryTable.createInventoryTable();
     }
 }

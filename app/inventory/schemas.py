@@ -1,5 +1,8 @@
+import csv
+import io
 import json
-from marshmallow import post_load, pre_load, validates
+from typing import Dict, List
+from marshmallow import post_dump, post_load, pre_dump, pre_load, validates
 from app import ma
 from app.core.models.device import Device as NornirDevice
 from app.core.models.bootstrap import Bootstrap 
@@ -24,7 +27,43 @@ class DeviceSchema(ma.SQLAlchemyAutoSchema):
         model = Device
         include_relationships = True
         include_fk = True
+        fields = ("hostname", "platform", "port", "custom", "date_modified", "date_created")
+    
+    hostname = ma.auto_field()
+    platform = ma.auto_field()
+    port = ma.auto_field()
+    custom = ma.auto_field()
 
+
+    @pre_dump
+    def device_dump(self, data, **kwargs):
+        a = data
+        return a
+
+    @post_dump
+    def device_post(self, data, **kwargs):
+        def generator(device: dict) -> str:
+            for k, v in device.items():
+                # remove empty attributes
+                if v:
+                    # custom keys inside data are shown, data key is not shown.
+                    if k == 'custom':
+                        if device[k] != 'None':
+                            for a, b in device[k].items():
+                                yield a, b
+                        else:
+                            pass
+                    # do not return groups column either
+                    elif k in OMITTED_DEVICE_ATTR:
+                        pass
+                    else:
+                        yield k, v
+        device = data.copy()
+        if device['custom'] != 'None':
+            device['custom'] = json.loads(device['custom'])
+            print(device)
+        data = {k:v for k,v in generator(device)}
+        return data
 
     @pre_load
     def device_db(self, data, **kwargs):
@@ -60,9 +99,13 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
         model = Inventory
         include_relationships = True
         include_fk = True
+        fields = ("name", "data", "user_id", "date_created", "date_modified")
 
     devices = []
-    device_schema = DeviceSchema()
+    name = ma.auto_field()
+    data = ma.auto_field()
+    user_id = ma.auto_field()
+    devices = ma.auto_field()
 
 
     @pre_load 
@@ -102,14 +145,15 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
 
     @post_load
     def create_inventory(self, data, **kwargs):
+        device_schema = DeviceSchema()
         data['slug'] = slugify(data['name'])
         new_inventory,_ = Inventory.get_or_create(db.session, **data)
         for device in self.devices:
             try:
-                device = self.device_schema.load(device)
+                device = device_schema.load(device)
             except Exception as e:
                 raise ValidationException("fail-config", e.error)
-            new_inventory.devices.append(device)
+            new_inventory.devices.append(device) 
         db.session.add(new_inventory)
         db.session.commit()
         return new_inventory

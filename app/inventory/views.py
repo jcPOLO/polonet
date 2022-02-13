@@ -49,42 +49,6 @@ def create_inventory(name, inventory, msg):
         flash('Bad inventory', category='error')
         return redirect(url_for('inventory_bp.home'))
     return redirect(url_for('inventory_bp.home'))
-
-def devices_db_dict_to_csv_text(devices: List[Dict]) -> str:
-    def generator(device: dict) -> str:
-        for k, v in device.items():
-                # remove empty attributes
-                if v:
-                    # custom keys inside data are shown, data key is not shown.
-                    if k == 'custom':
-                        if device[k] != 'None':
-                            for a, b in device[k].items():
-                                yield a, b
-                        else:
-                            pass
-                    # do not return groups column either
-                    elif k in OMITTED_DEVICE_ATTR:
-                        pass
-                    else:
-                        yield k, v
-    result = []
-    # This line converts a device SQLAlchemi object row to device dict.
-    row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
-    # Gets a List of device dictionaries
-    devices  = [row2dict(device) for device in devices]
-    for device in devices:
-        if 'custom' in device.keys():
-            if device['custom'] != 'None':
-                device['custom'] = json.loads(device['custom'])
-        result.append({k:v for k,v in generator(device)})
-    devices = result
-    file = io.StringIO()
-    keys = devices.keys() if type(devices) != list else devices[0].keys()
-    dict_writer = csv.DictWriter(file, fieldnames=keys)
-    dict_writer.writeheader()
-    dict_writer.writerows([devices]) if type(devices) != list else dict_writer.writerows(devices)
-    output = file.getvalue()
-    return output
     
 @inventory_bp.route('/', methods=['GET', 'POST'])
 @login_required
@@ -136,7 +100,9 @@ def inventory(slug):
                 inventory=inventory,
                 user=current_user,
             )
+    # TODO: Need to think how to accomplish this csv inventory modify thing
     if request.method == 'POST':
+        inventory_schema = InventorySchema()
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first()
         if inventory:
             data = request.form.get('data')
@@ -163,14 +129,14 @@ def inventory(slug):
 @inventory_bp.route('/v1/inventory/<slug>', methods=['POST', 'GET', 'DELETE', 'PUT'])
 @login_required
 def inventory_api(slug):
+    inventory_schema = InventorySchema()
+    device_schema = DeviceSchema(many=True)
     if request.method == 'GET':
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first() 
         if inventory:
-            # get Device.__iter__() dict for every device in a dict container.
             devices = inventory.devices
-            devices_csv = devices_db_dict_to_csv_text(devices)
-            values = Bootstrap.import_inventory_text(devices_csv)
-            json_data = json.dumps(values)
+            devices = device_schema.dump(devices)
+            json_data = json.dumps(devices)
             return json_data
     if request.method == 'PUT':
         data = json.loads(request.data) # add data in a python dict
