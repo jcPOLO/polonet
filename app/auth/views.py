@@ -26,6 +26,7 @@ def login():
             if check_password_hash(user.password, password):
                 login_user(user, remember=True)
                 flash('Logged in successfully!', category='success')
+                # TODO: implement next function to redirect to the requested page after login in
                 return redirect(url_for('inventory_bp.home'))
             else:
                 flash('Incorrect user password combination.', category='error')

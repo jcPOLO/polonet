@@ -18,11 +18,12 @@ class Device(Base):
 
 class Inventory(Base):
     name = db.Column(db.String(150))
+    slug = db.Column(db.String(150))
     data = db.Column(db.String(10000))
     user_id = db.Column(db.Integer, db.ForeignKey("user.id")) # 1:N
     devices = db.relationship('Device', secondary=inventory_device, backref='devices')
 
     __table_args__ = (
         # this can be db.PrimaryKeyConstraint if you want it to be a primary key
-        db.UniqueConstraint('user_id', 'name', name='unique_inventory_name'),
+        db.UniqueConstraint('user_id', 'slug', name='unique_inventory_name'),
     )

@@ -125,11 +125,11 @@ class InventoryTable {
 };
 
 // Function called when clicked on the X button close to the inventory name list.
-function deleteInventory(inventoryId) {
-    fetch('/inventory/'+ inventoryId, {
+function deleteInventory(inventorySlug) {
+    fetch('/inventory/'+ inventorySlug, {
         method: 'DELETE',
         credentials: 'include',
-        body: JSON.stringify({ inventoryId: inventoryId })
+        body: JSON.stringify({ inventorySlug: inventorySlug })
     }).then((_res) => {
         window.location.href = "/";
     });

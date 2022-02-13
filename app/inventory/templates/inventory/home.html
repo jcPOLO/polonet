@@ -8,8 +8,8 @@ Home
 <br />
 <ul class="list-group list-group-flush" id="inventories">
     {% for inventory in user.inventories %}
-    <a href="/inventory/{{ inventory.name }}"><li class="list-group-item">{{ inventory.name }}</a></list>
-    <button type="button" class="btn-close" onClick="deleteInventory({{ inventory.id }})" aria-label="Close"></button>
+    <a href="/inventory/{{ inventory.slug }}"><li class="list-group-item">{{ inventory.name }}</a></list>
+    <button type="button" class="btn-close" onClick="deleteInventory('{{ inventory.slug }}')" aria-label="Close"></button>
     {% endfor %}
 </ul>
 <br />

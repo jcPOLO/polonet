@@ -8,6 +8,7 @@ from app.inventory.models import Inventory, Device
 from app.core.helpers import json_to_csv
 from app import db
 from flask_login import current_user
+from slugify import slugify
 
 
 DEFAULT_DEVICE_ATTR = [
@@ -70,13 +71,13 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
         csv = json_to_csv(self.devices)
         data['data'] = csv
         return data
-
+    
     @validates('name')
     def validate_name(self, a):
         if not a:
             message = 'Inventory does not have name'
             raise ValidationException('fail-config', message)
-        exists = Inventory.query.filter_by(name=a, user_id=current_user.id).first()
+        exists = Inventory.query.filter_by(slug=slugify(a), user_id=current_user.id).first()
         if a in '< > | { / } \ , .'.split() :
                 message = "name '{}' is not a valid. ".format(a)
                 raise ValidationException("fail-config", message)
@@ -85,6 +86,7 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
             raise ValidationException('fail-config', message)
         else:
             return a
+
 
     @validates('data')
     def validate_data(self, a):
@@ -100,6 +102,7 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
 
     @post_load
     def create_inventory(self, data, **kwargs):
+        data['slug'] = slugify(data['name'])
         new_inventory,_ = Inventory.get_or_create(db.session, **data)
         for device in self.devices:
             try:

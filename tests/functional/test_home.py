@@ -1,3 +1,4 @@
+import io
 from bs4 import BeautifulSoup
 
 def logged_user(client):
@@ -68,7 +69,7 @@ def test_add_csv_inventory_name_exists(client_no_csrf):
     """
     GIVEN a csv like text in textarea
     WHEN submited
-    THEN show inventory name added and flash success msg appears.
+    THEN no new inventory is created and flash error appears
     """
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
@@ -92,7 +93,7 @@ def test_add_csv_inventory_exists(client_no_csrf):
     """
     GIVEN a csv like text in textarea
     WHEN submited
-    THEN show inventory name added and flash success msg appears.
+    THEN no new inventory is created and flash error appears
     """
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
@@ -112,19 +113,103 @@ def test_add_csv_inventory_exists(client_no_csrf):
     assert  b'has the same data. Invetory not created!' in res.data
     assert b'>inventory 1</a>' in res.data
 
-def test_add_csv_inventory_bad_name(client_no_csrf):
+def test_add_csv_inventory_no_name(client_no_csrf):
     """
     GIVEN a csv like text in textarea
     WHEN submited
-    THEN show inventory name added and flash success msg appears.
+    THEN no inventory is created
     """
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
         '/', 
         data=dict(
-            name="1' or '1' = '1", 
+            name='', 
             inventory='hostname\n1.1.1.1',
         ),follow_redirects=True
     )
-    # assert  b"Inventory 1' or '1' = '1 created!" in res.data
-    # assert b'>inventory 1</a>' in res.data
+    assert  b"created!" not in res.data
+
+# Upload CSV
+def test_upload_csv_inventory(client_no_csrf):
+    """
+    GIVEN a csv file
+    WHEN submited
+    THEN show inventory name added and flash success msg appears.
+    """
+    file_name = "inventory.csv"
+    content = b'hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
+    logged_user(client_no_csrf)
+    res = client_no_csrf.post(
+        '/', 
+        data=dict(
+            file=(io.BytesIO(content), file_name)
+        ),follow_redirects=True
+    )
+    assert  b'File inventory.csv uploaded!' in res.data
+    assert b'>inventory.csv</a>' in res.data
+
+def test_upload_csv_inventory_name_exists(client_no_csrf):
+    """
+    GIVEN a csv file
+    WHEN submited
+    THEN no new inventory is created and flash error appears
+    """
+    file_name = "inventory.csv"
+    content = b'hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
+    logged_user(client_no_csrf)
+    res = client_no_csrf.post(
+        '/', 
+        data=dict(
+            file=(io.BytesIO(content), file_name)
+        ),follow_redirects=True
+    )
+    content = b'hostname,port,site\n1.1.2.1,23,huesca\n2.2.2.2,22,teruel'
+    res = client_no_csrf.post(
+        '/', 
+        data=dict(
+            file=(io.BytesIO(content), file_name)
+        ),follow_redirects=True
+    )
+    assert  b'already exists! Use a different name.' in res.data
+    assert b'>inventory.csv</a>' in res.data
+
+def test_upload_csv_inventory_exists(client_no_csrf):
+    """
+    GIVEN a csv file
+    WHEN submited
+    THEN no new inventory is created and flash error appears
+    """
+    file_name = "inventory.csv"
+    content = b'hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
+    logged_user(client_no_csrf)
+    res = client_no_csrf.post(
+        '/', 
+        data=dict(
+            file=(io.BytesIO(content), file_name)
+        ),follow_redirects=True
+    )
+    res = client_no_csrf.post(
+        '/', 
+        data=dict(
+            file=(io.BytesIO(content), file_name)
+        ),follow_redirects=True
+    )
+    assert  b'has the same data. Invetory not created!' in res.data
+    assert b'>inventory.csv</a>' in res.data
+
+def test_upload_csv_inventory_no_name(client_no_csrf):
+    """
+    GIVEN a csv file
+    WHEN submited
+    THEN no new inventory is created.
+    """
+    file_name = "inventory.csv"
+    content = b'hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
+    logged_user(client_no_csrf)
+    res = client_no_csrf.post(
+        '/', 
+        data=dict(
+            file=(io.BytesIO(content), file_name)
+        ),follow_redirects=True
+    )
+    assert  b"created!" not in res.data
