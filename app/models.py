@@ -1,3 +1,4 @@
+from marshmallow_sqlalchemy import SQLAlchemySchema
 from app import db
 from sqlalchemy.sql import ClauseElement
 
@@ -32,3 +33,7 @@ class Base(db.Model):
                 return instance, False
             else:
                 return instance, True
+
+class BaseSchema(SQLAlchemySchema):
+    class Meta:
+        pass

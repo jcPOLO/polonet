@@ -8,7 +8,7 @@ PLATFORMS = ['ios', 'nxos']
 
 class Device(object):
     """
-    Class to validate every devices field loaded from CSV to YAML SimpleInventory
+    Class to validate every device field loaded from CSV to YAML SimpleInventory
 
     Args:
         hostname (str): Device management IP address
@@ -74,10 +74,11 @@ class Device(object):
     def validate_port(a):
         try:
             a = a.strip()
-            if 65535 > int(a) > 0:
-                return int(a)
         except AttributeError:
             pass
+        try:
+            if 65535 > int(a) > 0:
+                return int(a)
         except ValueError:
             pass
         message = "port '{}' is not a valid port number".format(a)

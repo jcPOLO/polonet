@@ -1,4 +1,4 @@
-from wtforms import SubmitField, StringField, TextAreaField
+from wtforms import SubmitField, StringField, TextAreaField, validators
 from flask_wtf.file import FileField
 from wtforms.validators import DataRequired
 from app.forms import BaseForm
@@ -7,11 +7,13 @@ from app.forms import BaseForm
 class InventoryForm(BaseForm):
     name = StringField('Inventory name',
     validators=[
-        DataRequired(message='Forgot introduce an inventory name?')
+        DataRequired(message='Forgot introduce an inventory name?'),
+        validators.length(max=150)
     ])
     inventory = TextAreaField('Paste csv formated text inventory.',
     validators=[
-        DataRequired(message='Forgot to paste csv formated text inventory?')
+        DataRequired(message='Forgot to paste csv formated text inventory?'),
+        validators.length(max=10000)
     ])
     submit = SubmitField("Add inventory")
 

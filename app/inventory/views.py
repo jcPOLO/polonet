@@ -6,15 +6,14 @@ import logging
 from typing import Dict, List
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from flask_login import login_required, current_user
-import sqlalchemy
 from app import db
-from app.inventory.models import Device, DeviceSchema, Inventory
+from app.inventory.schemas import InventorySchema, DeviceSchema
+from app.inventory.models import Device, Inventory
 from werkzeug.utils import secure_filename
 from app.core.models.bootstrap import Bootstrap
-from app.core.helpers import configure_logging, dir_path, json_to_csv
-from nornir import InitNornir
-from .forms import InventoryForm, UploadForm
+from app.core.helpers import dir_path, json_to_csv
 from app.core.exceptions import ValidationException
+from .forms import InventoryForm, UploadForm
 
 
 inventory_bp = Blueprint('inventory_bp', __name__, template_folder='templates')
@@ -36,44 +35,20 @@ def allowed_file(filename):
 # Check if it exists if not create it after validate its attributes.
 def create_inventory(name, inventory, msg):
     try:
-        # Validate data with Device model and return a list of Device __iter__() dicts.
-        inventory = Bootstrap.import_inventory_text(inventory)
-        # Convert to csv this json-like list
-        inventory_csv = json_to_csv(inventory)
+        inventory_schema = InventorySchema()
+        inventory = inventory_schema.load({
+            'name': name, 
+            'data': inventory, 
+            'user_id': current_user.id
+        })
+        flash(f'{msg}', category='success')
     except ValidationException as e:
         flash(f'{e.message}', category='error')
         return redirect(url_for('inventory_bp.home'))
     except AttributeError:
         flash('Bad inventory', category='error')
         return redirect(url_for('inventory_bp.home'))
-    inventory_exists = Inventory.query.filter_by(data=inventory_csv, user_id=current_user.id).first() 
-    name_exists = Inventory.query.filter_by(name=name, user_id=current_user.id).first()
-    if inventory_exists:
-        flash(f'Inventory {inventory_exists.name} has the same data. Invetory not created!', category='warning')
-    elif name_exists:
-        flash('Inventory name already exists! Use a different name', category='error')
-    else:
-        if len(inventory_csv) < 1 or name=='':
-            flash('Inventory does not have name or is empty', category='error')
-        else:
-            new_inventory = Inventory(
-                name=name,
-                data=inventory_csv, 
-                user_id=current_user.id
-            )
-            for device in inventory:
-                try:
-                    d,_ = Device.get_or_create(db.session, user_id=current_user.id, **device)
-                except sqlalchemy.exc.InvalidRequestError as e:
-                    custom = {k:v for k,v in device.items() if k not in DEFAULT_DEVICE_ATTR}
-                    device = {k:v for k,v in device.items() if k in DEFAULT_DEVICE_ATTR}
-                    device['custom'] = json.dumps(custom)
-                    d,_ = Device.get_or_create(db.session, user_id=current_user.id, **device)
-                new_inventory.devices.append(d)
-            db.session.add(new_inventory)
-            db.session.commit()
-            flash(f'{msg}', category='success')
-            return redirect(url_for('inventory_bp.home'))
+    return redirect(url_for('inventory_bp.home'))
 
 def csv_text_to_devices_db(devices: str) -> List:
     devices = csv.DictReader(io.StringIO(devices))

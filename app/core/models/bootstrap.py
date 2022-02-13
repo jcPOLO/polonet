@@ -76,14 +76,20 @@ class Bootstrap(object):
     @classmethod
     def import_inventory_text(cls,csv_file) -> dict:
         result = []
-        devices = cls.get_devices(cls,io.StringIO(csv_file))
+        try:
+            devices = cls.get_devices(cls,io.StringIO(csv_file))
+        except TypeError:
+            raise ValidationException("fail-config", "Not a valid csv formated text")
         for _, n in devices.items():
             result.append({k:v for k,v in n.no_groups()})
         return result
 
     def get_devices(cls, csv_file):
         devices = {}
-        csv_reader = DictReader(csv_file)
+        try:
+            csv_reader = DictReader(csv_file)
+        except TypeError:
+            raise ValidationException("fail-config", "Not a valid csv formated text")
         fields = 'hostname'
         csv_fields = set(csv_reader.fieldnames)
         cls.data_keys = csv_fields
@@ -94,7 +100,10 @@ class Bootstrap(object):
                 hostname = row['hostname'].strip()
                 if hostname not in devices.keys():
                     devices[hostname] = Device(**row)
+            if not devices:
+                raise ValidationException("fail-config", "no rows in csv")
             return devices
+            
         else:
             message = '{} not in csv header'.format(fields)
             logger.error(message)

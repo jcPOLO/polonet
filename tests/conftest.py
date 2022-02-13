@@ -15,10 +15,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 def runner(client):
     return client.test_cli_runner()
 
-def feed_db():
-    db.session.add(new_user())
-    db.session.commit()
 
+def feed_db():
+    user = new_user()
+    db.drop_all()
+    db.create_all()
+    db.session.add(user)
+    db.session.commit()
+    
 def new_user():
     new_user = User(
         email="test@test.com", 
@@ -26,15 +30,6 @@ def new_user():
         password=generate_password_hash('T3st3r1n0', method='sha256')
     )
     return new_user
-
-@pytest.fixture
-def new_inventory(new_user):
-    new_inventory = Inventory(
-        name="inventory 1",  
-        user_id=new_user.id,
-        data='hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
-    )
-    return new_inventory
 
 def test_app(test=True):
     db_fd, db_path = tempfile.mkstemp()
@@ -46,7 +41,6 @@ def client():
     app, db_fd, db_path = test_app()
     with app.test_client() as client:
         with app.app_context():
-            db.create_all()
             feed_db()
             yield client
     os.close(db_fd)
@@ -57,7 +51,6 @@ def client_no_csrf():
     app, db_fd, db_path = test_app(test='no_csrf')
     with app.test_client() as client:
         with app.app_context():
-            db.create_all()
             feed_db()
             yield client
     os.close(db_fd)
