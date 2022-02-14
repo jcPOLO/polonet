@@ -35,11 +35,13 @@ class Bootstrap(object):
         self,
         csv_file: str = f'{dir_path}/inventory.csv',
         ini_file: str = f'{dir_path}/../.global.ini',
+        devices: dict = None,
         encoding: str = "utf-8"
     ):
 
         self.ini_file = pathlib.Path(ini_file).expanduser()
         self.csv_file = pathlib.Path(csv_file).expanduser()
+        self.devices = devices
         self.encoding = encoding
         # self.load_inventory()
         self.data_keys = set()
@@ -51,7 +53,8 @@ class Bootstrap(object):
             return config
 
     def load_inventory(self) -> None:
-        self.create_hosts_yaml(self.import_inventory_file())
+        inventory = self.import_inventory_file() if self.devices == None else self.devices
+        self.create_hosts_yaml(inventory)
 
     @staticmethod
     def create_hosts_yaml(d: Dict) -> None:

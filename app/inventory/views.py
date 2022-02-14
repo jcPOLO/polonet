@@ -4,7 +4,7 @@ import json
 import os
 import logging
 from typing import Dict, List
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
+from flask import Blueprint, render_template, request, flash, redirect, session, url_for, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.inventory.schemas import InventorySchema, DeviceSchema
@@ -14,6 +14,7 @@ from app.core.models.bootstrap import Bootstrap
 from app.core.helpers import dir_path, json_to_csv
 from app.core.exceptions import ValidationException
 from .forms import InventoryForm, UploadForm
+from app.core.go import Go
 
 
 inventory_bp = Blueprint('inventory_bp', __name__, template_folder='templates')
@@ -129,27 +130,31 @@ def inventory(slug):
 @inventory_bp.route('/v1/inventory/<slug>', methods=['POST', 'GET', 'DELETE', 'PUT'])
 @login_required
 def inventory_api(slug):
-    inventory_schema = InventorySchema()
     device_schema = DeviceSchema(many=True)
     if request.method == 'GET':
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first() 
         if inventory:
             devices = inventory.devices
             devices = device_schema.dump(devices)
-            json_data = json.dumps(devices)
-            return json_data
+            return jsonify(devices)
     if request.method == 'PUT':
         data = json.loads(request.data) # add data in a python dict
-        data = json_to_csv(list(data))
+        # data = json_to_csv(list(data))
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first()
         if inventory:
             if inventory.user_id == current_user.id:
-                if inventory.data != data:
-                    inventory.data = data
-                    db.session.commit()
-                    flash('Inventory modified!', category='success')
-                else:
+                devices = inventory.devices
+                devices = device_schema.dump(devices)
+                if data == devices:
                     flash('Nothing has been modified!', category='info')
+                    return jsonify(devices), 304
+                flash('Inventory modified!', category='success')
+                return jsonify(data), 200
+                temp_inventory = Inventory()
+                db.session.commit()
+                flash('Inventory modified!', category='success')
+            else:
+                flash('Nothing has been modified!', category='info')
     if request.method == 'POST':
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first()
         if inventory:
@@ -178,22 +183,53 @@ def inventory_api(slug):
 def device(id):
     if request.method == 'PUT':
         device_schema = DeviceSchema()
-        data = json.loads(request.data) # add data in a python dict
-        data = device_schema.load(data)
-        device = Device.query.filter_by(id=id).first()
-        device = db.session.merge(Device(**data))
-        db.session.commit()
-        device = device_schema.dump(device)
-        print(device)
+        try:
+            data = json.loads(request.data) # add data in a python dict
+            data = device_schema.load(data)
+            data_dump = device_schema.dump(data)
+            device = Device.query.filter_by(id=id).first()
+            device = device_schema.dump(device)
+            if device == data_dump:
+                flash('Nothing has been modified!', category='info')
+                return jsonify(''), 304
+            device_updated = db.session.merge(Device(**data))
+            db.session.commit()
+            flash('Inventory modified!', category='success')
+            device_updated = device_schema.dump(device_updated)
+            return jsonify(device_updated), 200
+        except ValidationException as e:
+            flash(f'{e.message}', category='error')
+            return jsonify({}), 400
 
-        return jsonify(device)
-        data = json_to_csv(list(data))
-        device = Device.query.filter_by(data, user_id=current_user.id).first()
-        if inventory:
-            if inventory.user_id == current_user.id:
-                if inventory.data != data:
-                    inventory.data = data
-                    db.session.commit()
-                    flash('Inventory modified!', category='success')
-                else:
-                    flash('Nothing has been modified!', category='info')
+@inventory_bp.route('/menu', methods=['POST', 'GET'])
+@login_required
+def menu():
+    tasks = [
+            {'name': 'get_version','description': 'hacer un show version'},
+            {'name': 'save_config','description': 'guardar la configuracion'},
+            {'name': 'set_ipdomain.j2','description': 'poner el ip domain <prueba.com>'}
+        ] 
+    devices = session['devices'] or []
+    if request.method == 'POST':
+        devices = json.loads(request.data)
+        session['devices'] = devices
+        return jsonify(devices), 200
+    return render_template("inventory/menu.html",
+                            tasks=tasks,
+                            devices=devices,
+                            user=current_user,
+    )
+
+@inventory_bp.route('/v1/go', methods=['POST', 'GET'])
+@login_required
+def go():
+    if request.method == 'POST':
+        devices = session['devices']
+        tasks = request.form.getlist('data')
+        
+        print('tasks: ', tasks)
+        print('devices: ', devices)
+        go = Go(devices=devices)
+        results = go.run()
+
+        return jsonify(results)

@@ -37,3 +37,7 @@ INVENTORY_FILE = 'inventory.csv'
 # It will instruct Flask to print out the steps it goes through to 
 # locate templates on every render_template call.
 # EXPLAIN_TEMPLATE_LOADING = True
+
+# Set netmiko ntc-templates env system var needed for some tasks. (export NET_TEXTFSM=ruta/a/ntc_templates/templates)
+from glob import glob
+os.environ["NET_TEXTFSM"] = os.path.abspath(os.path.dirname('.'))+ '/' + ''.join(glob(".venv/**/ntc_templates/templates", recursive=True))

@@ -2,7 +2,7 @@ import csv
 import io
 import json
 from typing import Dict, List
-from marshmallow import post_dump, post_load, pre_dump, pre_load, validates
+from marshmallow import ValidationError, post_dump, post_load, pre_dump, pre_load, validates, INCLUDE
 from app import ma
 from app.core.models.device import Device as NornirDevice
 from app.core.models.bootstrap import Bootstrap 
@@ -27,17 +27,29 @@ class DeviceSchema(ma.SQLAlchemyAutoSchema):
         model = Device
         include_relationships = True
         include_fk = True
-        fields = ("hostname", "platform", "port", "custom", "date_modified", "date_created")
-    
+        fields = ("hostname", "platform", "port", "custom", "date_modified", "date_created", "id")
+
+    id = ma.auto_field()
     hostname = ma.auto_field()
     platform = ma.auto_field()
     port = ma.auto_field()
     custom = ma.auto_field()
 
 
+    # I think is only matched when port is introduced as string
+    def handle_error(self, exc, data, **kwargs):
+        """Log and raise our custom exception when (de)serialization fails."""
+        errors = []
+        exc = exc.messages
+        for k,msg in exc.items():
+            message = "{} is not valid. {}".format(k, ' '.join(msg))
+            errors.append(message)
+        message = ' '.join(errors)
+        raise ValidationException('fail-config', message)
+
     @pre_dump
     def device_dump(self, data, **kwargs):
-        a = data
+        a = data 
         return a
 
     @post_dump
@@ -71,7 +83,6 @@ class DeviceSchema(ma.SQLAlchemyAutoSchema):
         device = {k:v for k,v in data.items() if k in DEFAULT_DEVICE_ATTR }
         device['custom'] = json.dumps(custom)
         return device
-        # d,_ = Device.get_or_create(db.session, user_id=current_user.id, **device)
 
     @validates('hostname')
     def validate_hostname(self,a):
@@ -81,12 +92,15 @@ class DeviceSchema(ma.SQLAlchemyAutoSchema):
     def validate_port(self,a):
         return NornirDevice.validate_port(a)
 
+
     @validates('platform')
     def validate_platform(self,a):
         return NornirDevice.validate_platform(a)
 
     @post_load
     def create_devices(self, data, **kwargs):
+        if data.get('id'):
+            return data
         try:
             d,_ = Device.get_or_create(db.session, user_id=current_user.id, **data)
         except Exception as e:
@@ -100,8 +114,8 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
         include_relationships = True
         include_fk = True
         fields = ("name", "data", "user_id", "date_created", "date_modified")
+        unknown = INCLUDE
 
-    devices = []
     name = ma.auto_field()
     data = ma.auto_field()
     user_id = ma.auto_field()
@@ -110,8 +124,11 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
 
     @pre_load 
     def inventory_db(self, data, **kwargs):
-        self.devices = Bootstrap.import_inventory_text(data['data'].lower())
-        csv = json_to_csv(self.devices)
+        # si viene en json-like-dict y no en csv directamente
+        # if isinstance(data, dict):
+        #     data['data'] = json_to_csv(list(data))
+        data['devices'] = Bootstrap.import_inventory_text(data['data'].lower())
+        csv = json_to_csv(data['devices'])
         data['data'] = csv
         return data
     
@@ -147,8 +164,9 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
     def create_inventory(self, data, **kwargs):
         device_schema = DeviceSchema()
         data['slug'] = slugify(data['name'])
+        devices = data.pop('devices')
         new_inventory,_ = Inventory.get_or_create(db.session, **data)
-        for device in self.devices:
+        for device in devices:
             try:
                 device = device_schema.load(device)
             except Exception as e:

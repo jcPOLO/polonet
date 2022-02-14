@@ -96,9 +96,8 @@ class InventoryTable {
 
     // Updates in the backend the inventory attributed changed.
     onCellValueChanged(params) {
-        let changedData = [params.data];
         params.api.applyTransaction({ update: changedData });
-        const id = changedData[0].id
+        let id = changedData[0].id
         return this.updateDevice(id, changedData[0])
     };
 
@@ -109,7 +108,8 @@ class InventoryTable {
             credentials: 'include',
             body: JSON.stringify(data)
         }).then((_res) => {
-            window.location.href = '/inventory/'+ this.inventorySlug;
+            console.log(_res)
+            this.gridOptions.api.setRowData(data);
         });
     };
 
@@ -119,7 +119,24 @@ class InventoryTable {
             credentials: 'include',
             body: JSON.stringify(data)
         }).then((_res) => {
+            console.log(_res)
+            params.api.applyTransaction({ update: changedData });
             window.location.href = '/inventory/'+ this.inventorySlug;
+        });
+    };
+
+    goNornir(data) {
+        this.gridOptions.api.selectAll()
+        let selectedN = this.gridOptions.api.getSelectedNodes();
+        let devices = selectedN.map( node => node.data );
+        console.log(devices)
+        fetch('/menu', {
+            method: 'POST',
+            credentials: 'include',
+            body: JSON.stringify(devices)
+        }).then((_res) => {
+            console.log(_res)
+            window.location.href = '/menu'
         });
     };
 };
