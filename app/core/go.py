@@ -34,16 +34,16 @@ class Go(object):
     """
     def __init__(
         self,
-        csv_file: str = f'{dir_path}/inventory.csv',
-        ini_file: str = f'{dir_path}/../.global.ini',
         devices: dict = None,
-        cli: str = True
+        tasks: list = None,
+        cli: str = True,
+        **kwargs
     ):
 
-        self.ini_file = ini_file
-        self.csv_file = csv_file
         self.devices = devices
+        self.tasks = tasks
         self.cli = cli
+        self.data = kwargs or {}
 
 
     def run(self) -> None:
@@ -52,11 +52,7 @@ class Go(object):
 
         # creates hosts.yaml from csv file, ini file could be passed as arg,
         # by default .global.ini
-        bootstrap = Bootstrap(
-            ini_file=self.ini_file, 
-            csv_file=self.csv_file, 
-            devices=self.devices
-        )
+        bootstrap = Bootstrap(**self.data)
         bootstrap.load_inventory()
 
         # initialize Nornir object
@@ -69,21 +65,26 @@ class Go(object):
 
             # show the main menu
             menu_obj = Menu()
-            selections = menu_obj.run()
+            self.tasks = menu_obj.run()
 
             # before executing the tasks, ask for device credentials
             username = input("\nUsername:")
             password = getpass.getpass()
+        else:
+            devices = nr
+
+        username = self.data.get('username') or username
+        password = self.data.get('password') or password
 
         devices.inventory.defaults.password = password
         devices.inventory.defaults.username = username
 
         logger.info('----------- LOADING -----------\n')
 
-        result = self.main_task(devices, selections)
+        result = self.main_task(devices, self.tasks)
         return result
 
-    def main_task(devices: 'Nornir', selections: List, **kwargs) -> 'AggregatedResult':
+    def main_task(self, devices: 'Nornir', selections: List, **kwargs) -> 'AggregatedResult':
         result = devices.run(
             task=container_task,
             selections=selections,
@@ -92,6 +93,3 @@ class Go(object):
             **kwargs
         )
         return result
-
-
- 

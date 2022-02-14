@@ -226,10 +226,13 @@ def go():
     if request.method == 'POST':
         devices = session['devices']
         tasks = request.form.getlist('data')
+        devices = json_to_csv(list(devices))
+        print(devices)
         
         print('tasks: ', tasks)
         print('devices: ', devices)
-        go = Go(devices=devices)
-        results = go.run()
 
+        go = Go(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
+        results = go.run()
+        
         return jsonify(results)

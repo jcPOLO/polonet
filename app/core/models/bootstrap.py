@@ -33,18 +33,21 @@ class Bootstrap(object):
 
     def __init__(
         self,
-        csv_file: str = f'{dir_path}/inventory.csv',
         ini_file: str = f'{dir_path}/../.global.ini',
+        csv_file: str = f'{dir_path}/inventory.csv',
+        csv_text: str = None,
         devices: dict = None,
-        encoding: str = "utf-8"
+        encoding: str = "utf-8",
+        **kwargs
     ):
 
         self.ini_file = pathlib.Path(ini_file).expanduser()
         self.csv_file = pathlib.Path(csv_file).expanduser()
-        self.devices = devices
+        self.csv_text = kwargs.get('csv_text') or csv_text 
+        self.devices = kwargs.get('devices') or devices 
         self.encoding = encoding
-        # self.load_inventory()
         self.data_keys = set()
+        self.data = kwargs
 
     def get_ini_vars(self) -> configparser:
         if self.ini_file.exists():
@@ -53,7 +56,14 @@ class Bootstrap(object):
             return config
 
     def load_inventory(self) -> None:
-        inventory = self.import_inventory_file() if self.devices == None else self.devices
+        if self.csv_text:
+            self.csv_file = None
+            inventory = self.import_inventory_text()
+        if self.devices:
+            self.csv_file = None
+            inventory = self.devices
+        if self.csv_file:
+            inventory = self.import_inventory_file()
         self.create_hosts_yaml(inventory)
 
     @staticmethod
@@ -74,18 +84,29 @@ class Bootstrap(object):
             for h, n in devices.items():
                 result[h] = dict(n)
             return result
-
+    
     # Return a list of dicts from imported csv file
-    @classmethod
-    def import_inventory_text(cls,csv_file) -> dict:
-        result = []
+    def import_inventory_text(self) -> dict:
+        result = {}
         try:
-            devices = cls.get_devices(cls,io.StringIO(csv_file))
+            devices = self.get_devices(io.StringIO(self.csv_text))
         except TypeError:
             raise ValidationException("fail-config", "Not a valid csv formated text")
-        for _, n in devices.items():
-            result.append({k:v for k,v in n.no_groups()})
+        for h, n in devices.items():
+                result[h] = dict(n)
         return result
+
+    # # Return a list of dicts from imported csv file
+    # @classmethod
+    # def import_inventory_text(cls,csv_file) -> dict:
+    #     result = []
+    #     try:
+    #         devices = cls.get_devices(cls,io.StringIO(csv_file))
+    #     except TypeError:
+    #         raise ValidationException("fail-config", "Not a valid csv formated text")
+    #     for _, n in devices.items():
+    #         result.append({k:v for k,v in n.no_groups()})
+    #     return result
 
     def get_devices(cls, csv_file):
         devices = {}
