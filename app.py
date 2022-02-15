@@ -1,5 +1,5 @@
 from app import create_app
-from app.core import core
+from app.core.core import Core
 import sys
 
 if len(sys.argv) > 1:
@@ -8,7 +8,8 @@ if len(sys.argv) > 1:
     import os
     os.environ["NET_TEXTFSM"] = os.path.abspath(os.path.dirname('.'))+ \
         '/' + ''.join(glob(".venv/**/ntc_templates/templates", recursive=True))
-    core.main(inventory=sys.argv[1])
+    core = Core(csv_file=sys.argv[1])
+    core.run()
     exit()
 else:
     app = create_app()

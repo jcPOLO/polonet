@@ -127,7 +127,7 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
         # si viene en json-like-dict y no en csv directamente
         # if isinstance(data, dict):
         #     data['data'] = json_to_csv(list(data))
-        data['devices'] = Bootstrap.import_inventory_text(data['data'].lower())
+        data['devices'] = Bootstrap.validate_csv_inventory(data['data'].lower())
         csv = json_to_csv(data['devices'])
         data['data'] = csv
         return data

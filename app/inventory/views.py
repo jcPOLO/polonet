@@ -1,5 +1,3 @@
-import csv
-import io
 import json
 import os
 import logging
@@ -10,11 +8,10 @@ from app import db
 from app.inventory.schemas import InventorySchema, DeviceSchema
 from app.inventory.models import Device, Inventory
 from werkzeug.utils import secure_filename
-from app.core.models.bootstrap import Bootstrap
 from app.core.helpers import dir_path, json_to_csv
 from app.core.exceptions import ValidationException
 from .forms import InventoryForm, UploadForm
-from app.core.go import Go
+from app.core.core import Core
 
 
 inventory_bp = Blueprint('inventory_bp', __name__, template_folder='templates')
@@ -232,8 +229,8 @@ def go():
         print('tasks: ', tasks)
         print('devices: ', devices)
 
-        go = Go(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
-        results = go.run()
+        core = Core(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
+        results = core.run()
         output = []
         for device in results:
             num_tasks = len(results[device])
