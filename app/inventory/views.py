@@ -209,7 +209,7 @@ def menu():
             {'name': 'save_config','description': 'guardar la configuracion'},
             {'name': 'set_ipdomain.j2','description': 'poner el ip domain <prueba.com>'}
         ] 
-    devices = session['devices'] or []
+    devices = session.get('devices') or []
     if request.method == 'POST':
         devices = json.loads(request.data)
         session['devices'] = devices
@@ -234,5 +234,29 @@ def go():
 
         go = Go(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
         results = go.run()
-        
-        return jsonify(results)
+        output = []
+        for device in results:
+            num_tasks = len(results[device])
+            for i in range(num_tasks - 1):
+                node = dict(
+                    host = str(results[device][i].host),
+                    name_task = str(results[device][i].name),
+                    result_task = results[device][i].result,
+                    has_failed = str(results[device][i].failed),
+                    has_changed = str(results[device][i].changed),
+                    diff = str(results[device][i].diff),
+                    stderr = str(results[device][i].stderr),
+                    exception = str(results[device][i].exception),  
+                )
+                output.append(node)
+        return jsonify(output)
+ 
+@inventory_bp.route('/results', methods=['POST', 'GET'])
+def results():
+    if request.method == 'POST':
+        pass
+
+    return render_template(
+                    "inventory/results.html",
+                    user=current_user,
+    )

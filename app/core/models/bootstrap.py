@@ -33,15 +33,15 @@ class Bootstrap(object):
 
     def __init__(
         self,
-        ini_file: str = f'{dir_path}/../.global.ini',
         csv_file: str = f'{dir_path}/inventory.csv',
+        ini_file: str = f'{dir_path}/../.global.ini',
         csv_text: str = None,
         devices: dict = None,
         encoding: str = "utf-8",
         **kwargs
     ):
 
-        self.ini_file = pathlib.Path(ini_file).expanduser()
+        self.ini_file = pathlib.Path(ini_file).expanduser() 
         self.csv_file = pathlib.Path(csv_file).expanduser()
         self.csv_text = kwargs.get('csv_text') or csv_text 
         self.devices = kwargs.get('devices') or devices 

@@ -55,7 +55,7 @@ def main(inventory='inventory.csv') -> None:
 
     # creates hosts.yaml from csv file, ini file could be passed as arg,
     # by default .global.ini
-    bootstrap = Bootstrap(inventory)
+    bootstrap = Bootstrap(csv_file=inventory)
     bootstrap.load_inventory()
 
     # initialize Nornir object
