@@ -96,17 +96,17 @@ class Bootstrap(object):
                 result[h] = dict(n)
         return result
 
-    # # Return a list of dicts from imported csv file
-    # @classmethod
-    # def import_inventory_text(cls,csv_file) -> dict:
-    #     result = []
-    #     try:
-    #         devices = cls.get_devices(cls,io.StringIO(csv_file))
-    #     except TypeError:
-    #         raise ValidationException("fail-config", "Not a valid csv formated text")
-    #     for _, n in devices.items():
-    #         result.append({k:v for k,v in n.no_groups()})
-    #     return result
+    # Return a list of dicts from imported csv file
+    @classmethod
+    def validate_csv_inventory(cls,csv_text) -> dict:
+        result = []
+        try:
+            devices = cls.get_devices(cls,io.StringIO(csv_text))
+        except TypeError:
+            raise ValidationException("fail-config", "Not a valid csv formated text")
+        for _, n in devices.items():
+            result.append({k:v for k,v in n.no_groups()})
+        return result
 
     def get_devices(cls, csv_file):
         devices = {}
