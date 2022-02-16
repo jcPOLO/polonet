@@ -3,30 +3,24 @@
 Home
 {% endblock %}
 {% block content %}
-<h1>This is the inventory list page</h1>
-<h3 align="center">Inventories</h3>
-<br />
-<ul class="list-group list-group-flush" id="inventories">
-    {% for inventory in user.inventories %}
-    <a href="/inventory/{{ inventory.slug }}"><li class="list-group-item">{{ inventory.name }}</a></list>
-    <button type="button" class="btn-close" onClick="deleteInventory('{{ inventory.slug }}')" aria-label="Close"></button>
-    {% endfor %}
-</ul>
-<br />
-<form method="POST">
-    {{ inventory_form.hidden_tag() }}
-    {{ inventory_form.name.label }} {{ inventory_form.name() }}
-    {{ inventory_form.inventory(class="form-control") }}
-    <br />
-    <div align="center">
-        {{ inventory_form.submit(class="btn btn-primary") }}
+<section class="section">
+    <h1>DASHBOARD</h1>
+</section>
+<section class="row dashboard-head">
+    <div class="col dashboard-box">
+        HOSTS
+        <a href="{{ url_for('device_bp.devices') }}">{{ num_devices }}</a>
     </div>
-</form>
-<br />
-<form method="POST" enctype="multipart/form-data">
-    {{ upload_form.hidden_tag() }}
-    {{ upload_form.file.label }}
-    {{ upload_form.file(class="form-control") }}
-    {{ upload_form.submit(class="btn btn-primary") }}
-</form>
+    <div class="col dashboard-box">
+        FAILED HOSTS
+        <a href="{{ 'ola' }}">12 {{ 'ola' }}</a>
+    </div>
+    <div class="col dashboard-box">
+        INVENTORIES
+        <a href="{{ url_for('inventory_bp.inventories') }}">{{ num_inventories }}</a>
+    </div>
+    <div class="col dashboard-box">TASKS
+        <a href="{{ 'ola' }}">8 {{ 'ola' }}</a>
+    </div>
+</section>
 {% endblock %}

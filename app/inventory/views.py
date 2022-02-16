@@ -1,8 +1,9 @@
 import json
 import os
 import logging
+import time
 from typing import Dict, List
-from flask import Blueprint, render_template, request, flash, redirect, session, url_for, jsonify, current_app
+from flask import Blueprint, render_template, request, flash, redirect, session, url_for, jsonify, current_app, Response
 from flask_login import login_required, current_user
 from app import db
 from app.inventory.schemas import InventorySchema, DeviceSchema
@@ -42,15 +43,27 @@ def create_inventory(name, inventory, msg):
         flash(f'{msg}', category='success')
     except ValidationException as e:
         flash(f'{e.message}', category='error')
-        return redirect(url_for('inventory_bp.home'))
+        return redirect(url_for('inventory_bp.inventories'))
     except AttributeError:
         flash('Bad inventory', category='error')
-        return redirect(url_for('inventory_bp.home'))
-    return redirect(url_for('inventory_bp.home'))
-    
+        return redirect(url_for('inventory_bp.inventories'))
+    return redirect(url_for('inventory_bp.inventories'))
+
 @inventory_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
+    # GET
+    num_inventories = Inventory.query.filter_by(user_id=current_user.id).count()
+    num_devices = Device.query.filter_by(user_id=current_user.id).count()
+    return render_template("inventory/home.html",
+                            user=current_user,
+                            num_inventories=num_inventories,
+                            num_devices=num_devices,
+                            )
+
+@inventory_bp.route('/inventory', methods=['GET', 'POST'])
+@login_required
+def inventories():
     inventory_form = InventoryForm()
     upload_form = UploadForm()
     # POST de csv textArea
@@ -80,15 +93,16 @@ def home():
         # validate data and submit to db
         create_inventory(name, inventory, f'File {name} uploaded!')
     # GET
-    return render_template("inventory/home.html",
+    return render_template("inventory/inventories.html",
                             user=current_user, 
                             inventory_form=inventory_form,
                             upload_form=upload_form
-                            )
+                            ) 
 
 @inventory_bp.route('/inventory/<slug>', methods=['POST', 'GET', 'DELETE'])
 @login_required
 def inventory(slug):
+    # GET
     if request.method == 'GET':
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first() 
         if inventory:
@@ -99,6 +113,7 @@ def inventory(slug):
                 user=current_user,
             )
     # TODO: Need to think how to accomplish this csv inventory modify thing
+    # POST
     if request.method == 'POST':
         inventory_schema = InventorySchema()
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first()
@@ -110,7 +125,8 @@ def inventory(slug):
                 flash('Inventory modified!', category='success')
             else:
                 flash('Nothing has been modified!', category='info')
-            return redirect(url_for('inventory_bp.inventory', slug=slug))
+            return redirect(url_for('inventory_bp.inventories', slug=slug))
+    # DELETE
     if request.method == 'DELETE':
         data = json.loads(request.data) # add data in a python dict
         slug = data['inventorySlug']
@@ -120,20 +136,23 @@ def inventory(slug):
                 db.session.delete(inventory)
                 db.session.commit()
                 flash(f'Inventory {inventory.name} deleted!', category='success')
-        return jsonify({})
+        return jsonify({}), 200
 
-    redirect(url_for('inventory_bp.home'))
+    redirect(url_for('inventory_bp.inventories'))
 
 @inventory_bp.route('/v1/inventory/<slug>', methods=['POST', 'GET', 'DELETE', 'PUT'])
 @login_required
 def inventory_api(slug):
     device_schema = DeviceSchema(many=True)
+    # GET
     if request.method == 'GET':
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first() 
         if inventory:
             devices = inventory.devices
             devices = device_schema.dump(devices)
-            return jsonify(devices)
+            return jsonify(devices), 200
+        return jsonify({}), 400
+    # PUT
     if request.method == 'PUT':
         data = json.loads(request.data) # add data in a python dict
         # data = json_to_csv(list(data))
@@ -152,6 +171,7 @@ def inventory_api(slug):
                 flash('Inventory modified!', category='success')
             else:
                 flash('Nothing has been modified!', category='info')
+    # POST
     if request.method == 'POST':
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first()
         if inventory:
@@ -163,6 +183,7 @@ def inventory_api(slug):
             else:
                 flash('Nothing has been modified!', category='info')
             return inventory.data, 200
+    # DELETE
     if request.method == 'DELETE':
         data = json.loads(request.data) # add data in a python dict
         slug = data['inventorySlug']
@@ -173,87 +194,6 @@ def inventory_api(slug):
                 db.session.commit()
         return jsonify({})
 
-    redirect(url_for('inventory_bp.home'))
+    redirect(url_for('inventory_bp.inventory'))
 
-@inventory_bp.route('/v1/device/<id>', methods=['POST', 'GET', 'DELETE', 'PUT'])
-@login_required
-def device(id):
-    if request.method == 'PUT':
-        device_schema = DeviceSchema()
-        try:
-            data = json.loads(request.data) # add data in a python dict
-            data = device_schema.load(data)
-            data_dump = device_schema.dump(data)
-            device = Device.query.filter_by(id=id).first()
-            device = device_schema.dump(device)
-            if device == data_dump:
-                flash('Nothing has been modified!', category='info')
-                return jsonify(''), 304
-            device_updated = db.session.merge(Device(**data))
-            db.session.commit()
-            flash('Inventory modified!', category='success')
-            device_updated = device_schema.dump(device_updated)
-            return jsonify(device_updated), 200
-        except ValidationException as e:
-            flash(f'{e.message}', category='error')
-            return jsonify({}), 400
 
-@inventory_bp.route('/menu', methods=['POST', 'GET'])
-@login_required
-def menu():
-    tasks = [
-            {'name': 'get_version','description': 'hacer un show version'},
-            {'name': 'save_config','description': 'guardar la configuracion'},
-            {'name': 'set_ipdomain.j2','description': 'poner el ip domain <prueba.com>'}
-        ] 
-    devices = session.get('devices') or []
-    if request.method == 'POST':
-        devices = json.loads(request.data)
-        session['devices'] = devices
-        return jsonify(devices), 200
-    return render_template("inventory/menu.html",
-                            tasks=tasks,
-                            devices=devices,
-                            user=current_user,
-    )
-
-@inventory_bp.route('/v1/go', methods=['POST', 'GET'])
-@login_required
-def go():
-    if request.method == 'POST':
-        devices = session['devices']
-        tasks = request.form.getlist('data')
-        devices = json_to_csv(list(devices))
-        print(devices)
-        
-        print('tasks: ', tasks)
-        print('devices: ', devices)
-
-        core = Core(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
-        results = core.run()
-        output = []
-        for device in results:
-            num_tasks = len(results[device])
-            for i in range(num_tasks - 1):
-                node = dict(
-                    host = str(results[device][i].host),
-                    name_task = str(results[device][i].name),
-                    result_task = results[device][i].result,
-                    has_failed = str(results[device][i].failed),
-                    has_changed = str(results[device][i].changed),
-                    diff = str(results[device][i].diff),
-                    stderr = str(results[device][i].stderr),
-                    exception = str(results[device][i].exception),  
-                )
-                output.append(node)
-        return jsonify(output)
- 
-@inventory_bp.route('/results', methods=['POST', 'GET'])
-def results():
-    if request.method == 'POST':
-        pass
-
-    return render_template(
-                    "inventory/results.html",
-                    user=current_user,
-    )

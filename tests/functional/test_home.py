@@ -43,7 +43,7 @@ def test_home_user_logged(client):
         ),follow_redirects=True
     )
     assert  b'Logged in successfully!' in res.data
-    assert  b'Inventories</h3>' in res.data
+    assert  b'DASHBOARD</h1>' in res.data
     assert res.status_code == 200
     assert b'>Logout</a>' in res.data
     assert b'>Home</a>' in res.data
@@ -56,7 +56,7 @@ def test_add_csv_inventory(client_no_csrf):
     """
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             name='inventory 1', 
             inventory='hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel',
@@ -73,14 +73,14 @@ def test_add_csv_inventory_name_exists(client_no_csrf):
     """
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             name='inventory 1', 
             inventory='hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel',
         ),follow_redirects=True
     )
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             name="inventory 1", 
             inventory='hostname,port,site\n1.2.2.1,23,zaragoza\n2.3.3.2,22,huesca',
@@ -97,14 +97,14 @@ def test_add_csv_inventory_exists(client_no_csrf):
     """
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             name='inventory 1', 
             inventory='hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel',
         ),follow_redirects=True
     )
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             name="inventory 1", 
             inventory='hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel',
@@ -121,7 +121,7 @@ def test_add_csv_inventory_no_name(client_no_csrf):
     """
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             name='', 
             inventory='hostname\n1.1.1.1',
@@ -140,7 +140,7 @@ def test_upload_csv_inventory(client_no_csrf):
     content = b'hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             file=(io.BytesIO(content), file_name)
         ),follow_redirects=True
@@ -158,14 +158,14 @@ def test_upload_csv_inventory_name_exists(client_no_csrf):
     content = b'hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             file=(io.BytesIO(content), file_name)
         ),follow_redirects=True
     )
     content = b'hostname,port,site\n1.1.2.1,23,huesca\n2.2.2.2,22,teruel'
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             file=(io.BytesIO(content), file_name)
         ),follow_redirects=True
@@ -183,13 +183,13 @@ def test_upload_csv_inventory_exists(client_no_csrf):
     content = b'hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             file=(io.BytesIO(content), file_name)
         ),follow_redirects=True
     )
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             file=(io.BytesIO(content), file_name)
         ),follow_redirects=True
@@ -207,7 +207,7 @@ def test_upload_csv_inventory_no_name(client_no_csrf):
     content = b'hostname,port,site\n1.1.1.1,23,zaragoza\n2.2.2.2,22,teruel'
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             file=(io.BytesIO(content), file_name)
         ),follow_redirects=True

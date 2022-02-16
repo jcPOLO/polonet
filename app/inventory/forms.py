@@ -8,7 +8,7 @@ class InventoryForm(BaseForm):
     name = StringField('Inventory name',
     validators=[
         DataRequired(message='Forgot introduce an inventory name?'),
-        validators.length(max=150)
+        validators.length(max=60)
     ])
     inventory = TextAreaField('Paste csv formated text inventory.',
     validators=[

@@ -36,7 +36,7 @@ def test_login_user_success(client):
     user = User.query.filter(User.email=='test@test.com').first()
     assert current_user.id == user.id
     assert current_user.is_active == True
-    assert b'Inventories</h3>' in res.data
+    assert b'DASHBOARD</h1>' in res.data
     assert res.status_code == 200
 
 def test_login_user_success_no_csrf(client_no_csrf):
@@ -56,7 +56,7 @@ def test_login_user_success_no_csrf(client_no_csrf):
     user = User.query.filter(User.email=='test@test.com').first()
     assert current_user.id == user.id
     assert current_user.is_active == True
-    assert b'Inventories</h3>' in res.data
+    assert b'DASHBOARD</h1>' in res.data
     assert res.status_code == 200
 
 def test_login_user_bad__password_no_csrf(client_no_csrf):

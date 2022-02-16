@@ -3,17 +3,12 @@
 Home
 {% endblock %}
 {% block content %}
-<h1>This is the Inventory page</h1>
+<section class="section">
+    <h1>INVENTORY</h1>
+</section>
 <h3 align="center">Inventory {{ inventory.name }}</h3>
-<form method="POST">
-    <textarea name="data" id="data" class="form-control">{{ inventory.data }}</textarea>
-    <br />
-    <div align="center">
-        <button type="submit" class="btn btn-primary">Modify inventory</button>
-    </div>
-</form>
 <button onclick="inventoryTable.getSelectedRows()">Get Selected Rows</button>
 <div id="myGrid" class="ag-theme-alpine" style="width: 100;" name="{{ inventory.slug }}"></div>
 <br />
-<button onclick="inventoryTable.goNornir()">GO</button>
+<button onclick="inventoryTable.goNornir()">Go to tasks!</button>
 {% endblock %}

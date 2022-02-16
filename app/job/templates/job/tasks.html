@@ -3,10 +3,11 @@
 Go
 {% endblock %}
 {% block content %}
-<h1>This is the Menu page</h1>
-<h3 align="center">Menu Tasks</h3>
+<section class="section">
+    <h1>TASKS</h1>
+</section>
 <section class="center" id="task-section" width="100%">
-    <form method="POST" action="/v1/go">
+    <form method="POST" action="/job/result">
     {% for task in tasks %}
     <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="{{ task.name }}" name="data" value="{{ task.name }}">

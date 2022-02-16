@@ -1,5 +1,3 @@
-import io
-import json
 from bs4 import BeautifulSoup
 
 def logged_user(client):
@@ -44,11 +42,12 @@ def test_inventory_user_logged(client):
         ),follow_redirects=True
     )
     response = client.get('/inventory/inventory1')
-    assert  b'Modify inventory' in response.data
+    assert  b'INVENTORY</h1>' in response.data
     assert response.status_code == 200
     assert b'>Logout</a>' in response.data
     assert b'>Home</a>' in response.data
 
+# TODO: Before the change, csv like output was shown. Now table thing to show.
 def test_inventory_csv_is_loaded(client_no_csrf):
     """
     GIVEN inventory <inventory> selected in home
@@ -57,7 +56,7 @@ def test_inventory_csv_is_loaded(client_no_csrf):
     """
     logged_user(client_no_csrf)
     response = client_no_csrf.get('/inventory/inventory1')
-    assert  b'3.3.3.3,22,ios,teruel' in response.data
+    assert  b'INVENTORY</h1>' in response.data
     assert response.status_code == 200
 
 # TODO: I have no idea how to test if js table is being loaded and doing fetch to API to get the data
@@ -69,12 +68,12 @@ def test_inventory_table_is_loaded(client_no_csrf):
     """
     logged_user(client_no_csrf)
     res = client_no_csrf.post(
-        '/', 
+        '/inventory', 
         data=dict(
             name='inventory2', 
             inventory='hostname,port,site\n1.2.1.1,23,zaragoza\n2.3.2.2,22,teruel',
         ),follow_redirects=True
     )
     response = client_no_csrf.get('/inventory/inventory2',follow_redirects=True)
-    assert b'teruel' in response.data
+    assert b'ag' in response.data
     assert response.status_code == 200

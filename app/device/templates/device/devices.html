@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}
+Home
+{% endblock %}
+{% block content %}
+<section class="section">
+    <h1>DEVICES</h1>
+</section>
+<ul class="list-group list-group-flush" id="devices">
+    {% for device in user.devices %}
+    <li class="list-group-item">
+        <a href="/device/{{ device.id }}">
+            {{ device.hostname }} - 
+        {% for inventory in device.devices %}
+            {{ inventory.slug }}
+        {% endfor %}
+        </a>
+    </list>
+    <button type="button" class="btn-close btn-delete" onClick="deleteDevice('{{ device.id }}')" aria-label="Close"></button>
+    {% endfor %}
+</ul>
+{% endblock %}

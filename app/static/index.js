@@ -1,5 +1,12 @@
+// Toggle dark/light theme
+const btn = document.querySelector('.btn-toggle');
+btn.addEventListener('click', function() {
+  document.body.classList.toggle('dark-theme');  
+  btn.innerHTML = document.body.classList.contains('dark-theme') ? 'Light' : 'Dark';
+});
+
 // InventoryTable class. 
-// It does all ralted tasks for ag-grid table framekwork and it has all its config.
+// It does all ralated tasks for ag-grid table framekwork and it has all its config.
 HIDDEN_DEVICE_ATTR = ['id','date_created','date_modified'];
 
 class InventoryTable {
@@ -96,14 +103,15 @@ class InventoryTable {
 
     // Updates in the backend the inventory attributed changed.
     onCellValueChanged(params) {
+        const changedData = [params.data];
         params.api.applyTransaction({ update: changedData });
-        let id = changedData[0].id
+        const id = changedData[0].id
         return this.updateDevice(id, changedData[0])
     };
 
     // TODO: Need to only update/refresh the attributed changed. 
     updateInventory(data=[]) {
-        fetch('/v1/inventory/'+ this.inventorySlug, {
+        fetch('/inventory/'+ this.inventorySlug, {
             method: 'PUT',
             credentials: 'include',
             body: JSON.stringify(data)
@@ -114,29 +122,29 @@ class InventoryTable {
     };
 
     updateDevice(id, data=[]) {
-        fetch('/v1/device/' + id, {
+        fetch('/device/' + id, {
             method: 'PUT',
             credentials: 'include',
             body: JSON.stringify(data)
         }).then((_res) => {
             console.log(_res)
-            params.api.applyTransaction({ update: changedData });
+            // params.api.applyTransaction({ update: changedData });
             window.location.href = '/inventory/'+ this.inventorySlug;
         });
     };
 
     goNornir(data) {
         this.gridOptions.api.selectAll()
-        let selectedN = this.gridOptions.api.getSelectedNodes();
-        let devices = selectedN.map( node => node.data );
+        const selectedN = this.gridOptions.api.getSelectedNodes();
+        const devices = selectedN.map( node => node.data );
         console.log(devices)
-        fetch('/menu', {
+        fetch('/job', {
             method: 'POST',
             credentials: 'include',
             body: JSON.stringify(devices)
         }).then((_res) => {
             console.log(_res)
-            window.location.href = '/menu'
+            window.location.href = '/job'
         });
     };
 };
@@ -148,7 +156,12 @@ function deleteInventory(inventorySlug) {
         credentials: 'include',
         body: JSON.stringify({ inventorySlug: inventorySlug })
     }).then((_res) => {
-        window.location.href = "/";
+        if (_res.status == 200) {
+            console.log('inventory ' + inventorySlug + ' deleted');
+            window.location.href = "/inventory";
+        } else {
+            console.log('problemas borrando inventario');
+        }
     });
 };
 

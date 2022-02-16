@@ -9,16 +9,16 @@ inventory_device = db.Table('devices',
 
 # TODO: When a device does not have associated any inventory, we could delete the device.
 class Device(Base):
-    hostname = db.Column(db.String(150))
-    platform = db.Column(db.String(150))
+    hostname = db.Column(db.String(39))
+    platform = db.Column(db.String(20))
     port = db.Column(db.Integer)
     custom = db.Column(db.JSON)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id")) # 1:N
 
 
 class Inventory(Base):
-    name = db.Column(db.String(150))
-    slug = db.Column(db.String(150))
+    name = db.Column(db.String(60))
+    slug = db.Column(db.String(60))
     data = db.Column(db.String(10000))
     user_id = db.Column(db.Integer, db.ForeignKey("user.id")) # 1:N
     devices = db.relationship('Device', secondary=inventory_device, backref='devices')

@@ -33,10 +33,14 @@ def create_app(test=False, db_path=None):
     ma.init_app(app)
 
     from app.inventory.views import inventory_bp
+    from app.device.views import device_bp
     from app.auth.views import auth_bp
+    from app.job.views import job_bp
 
     app.register_blueprint(inventory_bp, url_prefix='/')
     app.register_blueprint(auth_bp, url_prefix='/')
+    app.register_blueprint(device_bp, url_prefix='/')
+    app.register_blueprint(job_bp, url_prefix='/')
 
     from app.auth.models import User
 

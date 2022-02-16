@@ -36,7 +36,7 @@ def test_user_sign_up_success(client):
         ),follow_redirects=True
     )
     assert  b'Account created!' in res.data
-    assert  b'Inventories</h3>' in res.data
+    assert  b'DASHBOARD</h1>' in res.data
     assert res.status_code == 200
 
 
@@ -106,7 +106,7 @@ def test_user_sign_up_bad_credentials(client):
         ),follow_redirects=True
     )
     assert  b'Account created!' in res.data
-    assert  b'Inventories</h3>' in res.data
+    assert  b'DASHBOARD</h1>' in res.data
     assert res.status_code == 200
     user = User.query.filter(User.email=="1'or'1'='1@hack.com").first()
     assert user.first_name == "1' or '1' = '1"
