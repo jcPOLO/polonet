@@ -3,27 +3,24 @@
 Home
 {% endblock %}
 {% block content %}
-<h1>This is the home page</h1>
-<h1 align="center">Inventories</h1>
-<ul class="list-group list-group-flush" id="inventories">
-    {% for inventory in user.inventories %}
-    <a href="/inventory/{{ inventory.name }}"><li class="list-group-item">{{ inventory.name }}></a></list>
-        <button type="button" class="btn-close" onClick="deleteInventory({{ inventory.id }})" aria-label="Close"></button>
-    {% endfor %}
-</ul>
-<form method="POST">
-    <label for="name">Name:</label><br>
-    <input type="text" id="inventoryName" name="inventoryName"><br>
-    <textarea name="inventory" id="inventory" class="form-control"></textarea>
-    <div align="center">
-        <button type="submit" class="btn btn-primary">Add inventory</button>
+<section class="section">
+    <h1>DASHBOARD</h1>
+</section>
+<section class="row dashboard-head">
+    <div class="col dashboard-box">
+        HOSTS
+        <a href="{{ url_for('device_bp.devices') }}">{{ num_devices }}</a>
     </div>
-</form>
-<div class="mb-3">
-    <form  action="/upload" method="POST" enctype="multipart/form-data">
-        <label for="formFile" class="form-label">Add your inventory</label>
-        <input class="form-control" type="file" id="formFile" name="file">
-        <input type="submit" class="btn btn-primary" value="Upload">
-    </form>
-</div>
+    <div class="col dashboard-box">
+        FAILED HOSTS
+        <a href="{{ 'ola' }}">12 {{ 'ola' }}</a>
+    </div>
+    <div class="col dashboard-box">
+        INVENTORIES
+        <a href="{{ url_for('inventory_bp.inventories') }}">{{ num_inventories }}</a>
+    </div>
+    <div class="col dashboard-box">TASKS
+        <a href="{{ 'ola' }}">8 {{ 'ola' }}</a>
+    </div>
+</section>
 {% endblock %}

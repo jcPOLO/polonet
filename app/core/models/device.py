@@ -8,7 +8,7 @@ PLATFORMS = ['ios', 'nxos']
 
 class Device(object):
     """
-    Class to validate every devices field loaded from CSV to YAML SimpleInventory
+    Class to validate every device field loaded from CSV to YAML SimpleInventory
 
     Args:
         hostname (str): Device management IP address
@@ -74,10 +74,11 @@ class Device(object):
     def validate_port(a):
         try:
             a = a.strip()
-            if 65535 > int(a) > 0:
-                return int(a)
         except AttributeError:
             pass
+        try:
+            if 65535 > int(a) > 0:
+                return int(a)
         except ValueError:
             pass
         message = "port '{}' is not a valid port number".format(a)
@@ -106,6 +107,20 @@ class Device(object):
             'data': self.data
         }
 
+    def no_groups(self):
+        for k, v in self._device_dict().items():
+            # remove empty attributes
+            if v:
+                # custom keys inside data are shown, data key is not shown.
+                if k == 'data':
+                    for a, b in self._device_dict()[k].items():
+                        yield a, b
+                # do not return groups column either
+                elif k == 'groups':
+                    pass
+                else:
+                    yield k, v
+
     def __iter__(self):
         for k, v in self._device_dict().items():
             # remove empty attributes
@@ -114,5 +129,8 @@ class Device(object):
                 if k == 'data':
                     for a, b in self._device_dict()[k].items():
                         yield a, b
+                # do not return groups column either
+                # elif k == 'groups':
+                #     pass
                 else:
                     yield k, v

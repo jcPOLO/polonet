@@ -8,3 +8,4 @@ class User(Base, UserMixin):
     password = db.Column(db.String(150))
     first_name = db.Column(db.String(150))
     inventories = db.relationship('Inventory') # 1:N
+    devices = db.relationship('Device') # 1:N

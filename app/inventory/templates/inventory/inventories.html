@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}
+Home
+{% endblock %}
+{% block content %}
+<section class="section">
+    <h1>INVENTORIES</h1>
+</section>
+<section class="row">
+    <div class="col">
+        <ul class="list-group list-group-flush" id="inventories">
+            {% for inventory in user.inventories %}
+            <a href="/inventory/{{ inventory.slug }}"><li class="list-group-item">{{ inventory.name }}</a></list>
+            <button type="button" class="btn-close btn-delete" onClick="deleteInventory('{{ inventory.slug }}')" aria-label="Close"></button>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="col">
+        <form method="POST">
+            {{ inventory_form.hidden_tag() }}
+            {{ inventory_form.name() }} {{ inventory_form.name.label }}
+            {{ inventory_form.inventory(class="form-control") }}
+            <div align="left" class="margin-bottom">
+                {{ inventory_form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+        <form method="POST" enctype="multipart/form-data">
+            {{ upload_form.hidden_tag() }}
+            {{ upload_form.file.label }}
+            {{ upload_form.file(class="form-control") }}
+            {{ upload_form.submit(class="btn btn-primary") }}
+        </form>
+    </div>
+</section>
+{% endblock %}
