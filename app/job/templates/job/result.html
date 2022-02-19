@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}
+Jobs
+{% endblock %}
+{% block content %}
+<section class="section">
+    <h1>JOBS</h1>
+</section>
+<section class="row">
+    <div class="col p-3 border bg-light">
+        <h3>RESULTS</h3>
+        <div class="row">
+            <div class="col">
+                <p class="">STATUS</p>
+                <p class="">NAME</p>
+                <p class="">STARTED</p>
+                <p class="">FINISHED</p>
+                <p class="">ELAPSED</p>
+                <p class="">INVENTORY</p>
+                <p class="">LAUNCHED BY</p>
+            </div>
+            <div class="col">
+                <p class="">{{ "failed" if status.failed else "success"}}</p>
+                <p class="">{{ "texto" }}</p>
+                <p class="">{{ "texto" }}</p>
+                <p class="">{{ "texto" }}</p>
+                <p class="">{{ "texto" }}</p>
+                <p class="">{{ "texto" }}</p>
+                <p class="">{{ "texto" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col p-3 border bg-light">
+        <h3>OUTPUT</h3>
+        <div></div>
+    </div>
+</section>
+{% endblock %}

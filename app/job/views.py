@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.inventory.schemas import InventorySchema, DeviceSchema
 from app.inventory.models import Device, Inventory
+from app.job.models import Job
 from app.core.helpers import dir_path, json_to_csv
 from app.core.core import Core
 
@@ -49,6 +50,9 @@ def tasks():
 def jobs():
     # GET
     results = session.get('results')
+    if request.method == 'GET':
+
+        pass
 
     if request.method == 'POST':
         devices = session['devices']
@@ -62,6 +66,7 @@ def jobs():
         core = Core(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
         results = core.run()
         output = []
+        status = {'failed': results.failed}
         for device in results:
             num_tasks = len(results[device])
             for i in range(num_tasks - 1):
@@ -82,11 +87,15 @@ def jobs():
                 for host, v in results.items()
             ]
         )
+        status = "success"
+        # started_at = 
+        # finished_at =
+        # user_id = 
+        # inventory_id = 
+        # output = 
+        session['results'] = output
         print(objects)
-
-        redirect(url_for('inventory_bp.inventories'))
-        return jsonify(output)
-    return render_template("job/result.html",
-                            user=current_user,
-                            jobs=jobs,
-                            )
+        return render_template("job/result.html",
+                                user=current_user,
+                                status=status,
+                                )

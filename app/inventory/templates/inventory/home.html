@@ -13,14 +13,14 @@ Home
     </div>
     <div class="col dashboard-box">
         FAILED HOSTS
-        <a href="{{ 'ola' }}">12 {{ 'ola' }}</a>
+        <a href="{{ url_for('job_bp.jobs') }}">{{ '-1' }}</a>
     </div>
     <div class="col dashboard-box">
         INVENTORIES
         <a href="{{ url_for('inventory_bp.inventories') }}">{{ num_inventories }}</a>
     </div>
     <div class="col dashboard-box">TASKS
-        <a href="{{ 'ola' }}">8 {{ 'ola' }}</a>
+        <a href="{{ url_for('job_bp.tasks') }}">{{ '-1' }}</a>
     </div>
 </section>
 {% endblock %}

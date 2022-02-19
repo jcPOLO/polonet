@@ -5,7 +5,9 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_marshmallow import Marshmallow
 
+
 db = SQLAlchemy() 
+migrate = Migrate()
 ma = Marshmallow()
 login_manager = LoginManager()
 
@@ -27,9 +29,8 @@ def create_app(test=False, db_path=None):
         # load the instance config, if it exists, when not testing
         app.config.from_object('config')
 
-    migrate = Migrate(app, db)
-
     db.init_app(app)
+    migrate.init_app(app, db)
     ma.init_app(app)
 
     from app.inventory.views import inventory_bp
@@ -63,6 +64,7 @@ def create_app(test=False, db_path=None):
         return app
 
     create_database(app)
+    # seed_database()
     return app
 
 
