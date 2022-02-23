@@ -107,6 +107,7 @@ def inventory(slug):
         inventory = Inventory.query.filter_by(slug=slug, user_id=current_user.id).first() 
         if inventory:
             # get Device.__iter__() dict for every device in a dict container.
+            session['inventory_name'] = inventory.name
             return render_template(
                 "inventory/inventory.html",
                 inventory=inventory,

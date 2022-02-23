@@ -20,13 +20,13 @@ Jobs
                 <p class="">LAUNCHED BY</p>
             </div>
             <div class="col">
-                <p class="">{{ "failed" if status.failed else "success"}}</p>
+                <p class="">{{ "failed" if status else "success"}}</p>
                 <p class="">{{ "texto" }}</p>
+                <p class="">{{ result.started_at }}</p>
+                <p class="">{{ result.finished_at }}</p>
                 <p class="">{{ "texto" }}</p>
-                <p class="">{{ "texto" }}</p>
-                <p class="">{{ "texto" }}</p>
-                <p class="">{{ "texto" }}</p>
-                <p class="">{{ "texto" }}</p>
+                <p class="">{{ session.inventory_name }}</p>
+                <p class="">{{ result.user }}</p>
             </div>
         </div>
     </div>

@@ -1,4 +1,5 @@
 from crypt import methods
+from datetime import datetime
 import json
 import os
 import logging
@@ -9,8 +10,10 @@ from app import db
 from app.inventory.schemas import InventorySchema, DeviceSchema
 from app.inventory.models import Device, Inventory
 from app.job.models import Job
+from app.job.schemas import JobSchema
 from app.core.helpers import dir_path, json_to_csv
 from app.core.core import Core
+from app.job.helper import print_result
 
 
 job_bp = Blueprint('job_bp', __name__, template_folder='templates')
@@ -48,10 +51,10 @@ def tasks():
 @job_bp.route('/job/result', methods=['GET','POST'])
 @login_required
 def jobs():
+    job_schema = JobSchema()
     # GET
     results = session.get('results')
     if request.method == 'GET':
-
         pass
 
     if request.method == 'POST':
@@ -64,38 +67,44 @@ def jobs():
         print('devices: ', devices)
 
         core = Core(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
-        results = core.run()
-        output = []
-        status = {'failed': results.failed}
-        for device in results:
-            num_tasks = len(results[device])
-            for i in range(num_tasks - 1):
-                node = dict(
-                    host = str(results[device][i].host),
-                    name_task = str(results[device][i].name),
-                    result_task = results[device][i].result,
-                    has_failed = str(results[device][i].failed),
-                    has_changed = str(results[device][i].changed),
-                    diff = str(results[device][i].diff),
-                    stderr = str(results[device][i].stderr),
-                    exception = str(results[device][i].exception),
-                )
-                output.append(node)
-        objects = ", ".join(
-            [
-                f'{{host: "{host}", success: {not v.failed}, task: "asdf"}}'
-                for host, v in results.items()
-            ]
+        data = dict(
+            inventory_id= session['inventory'],
+            output = '',
+            status=1,
         )
-        status = "success"
-        # started_at = 
-        # finished_at =
-        # user_id = 
-        # inventory_id = 
-        # output = 
+        job = job_schema.load(data)
+        results = core.run()
+        job.finished_at = datetime.now()
+        db.session.commit()
+        result = job_schema.dump(job)
+
+        output = print_result(results)
+        status = results.failed
+        # for device in results:
+        #     num_tasks = len(results[device])
+        #     for i in range(num_tasks - 1):
+        #         node = dict(
+        #             host = str(results[device][i].host),
+        #             name_task = str(results[device][i].name),
+        #             result_task = results[device][i].result,
+        #             has_failed = str(results[device][i].failed),
+        #             has_changed = str(results[device][i].changed),
+        #             diff = str(results[device][i].diff),
+        #             stderr = str(results[device][i].stderr),
+        #             exception = str(results[device][i].exception),
+        #         )
+        #         output.append(node)
+        # objects = ", ".join(
+        #     [
+        #         f'{{host: "{host}", success: {not v.failed}, task: "asdf"}}'
+        #         for host, v in results.items()
+        #     ]
+        # )
         session['results'] = output
-        print(objects)
+        print(output)
         return render_template("job/result.html",
                                 user=current_user,
                                 status=status,
+                                session=session,
+                                result=result
                                 )

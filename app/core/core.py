@@ -104,8 +104,7 @@ class Core(object):
                 if retry == 'y':
                     params = {
                         'on_good': False,
-                        'on_failed': True,
-                        'on_retry': True
+                        'on_failed': True
                     }
                     result = self.main_task(devices, self.tasks, **params)
                     print_result(result)
@@ -138,14 +137,20 @@ class Core(object):
         )
         for host in result.failed_hosts:
             logger.error(
-                'Host: \x1b[1;31;40m{}\n{}\x1b[0m'
-            ).format(host, devices.inventory.hosts[host].hostname)
+                'Host: \x1b[1;31;40m{}\n{}\x1b[0m'.format(
+                    host, devices.inventory.hosts[host].hostname
+                )
+            )
             logger.error(
-                '|_Error: \x1b[0;31;40m{}\x1b[0m'
-                ).format(result[host][1].exception)
+                '|_Error: \x1b[0;31;40m{}\x1b[0m'.format(
+                    result[host][1].exception
+                )
+            )
             logger.error(
-                '|_Task: {}'
-                ).format(result.failed_hosts[host])
+                '|_Task: {}'.format(
+                    result.failed_hosts[host]
+                )
+            )
 
         print(
             """
