@@ -8,13 +8,14 @@ import os
 import logging
 
 
-GET_VERSION_MSG = "SHOW VERSION PARA EL HOST: {}"
-GET_NEIGHBORS_MSG = "MUESTRA LOS VECINOS DEL INTERFACE {}"
-GET_INTERFACE_DESCRIPTION_MSG = "SHOW INTERFACE {} PARA EL HOST: {}"
-GET_CONFIG_MSG = "SHOW RUN PARA EL HOST: {} {}"
+GET_VERSION_MSG = "GET_VERSION - SHOW VERSION PARA EL HOST: {}"
+GET_NEIGHBORS_MSG = "GET_NEIGHBORS - MUESTRA LOS VECINOS DEL INTERFACE {}"
+GET_INTERFACE_DESCRIPTION_MSG = "GET_INTERFACE - SHOW INTERFACE {} PARA EL HOST: {}"
+GET_CONFIG_MSG = "GET_CONFIG - SHOW RUN PARA EL HOST: {} {}"
 GET_INTERFACE_STATUS_MSG = "SHOW INTERFACE STATUS PARA EL HOST: {}"
 GET_INTERFACES_TRUNK_MSG = "SHOW INTERFACE TRUNK PARA EL HOST: {}"
-GET_DIR_MSG = "DIR FLASH:/ PARA EL HOST: {}"
+GET_DIR_MSG = "GET_DIR - DIR FLASH:/ PARA EL HOST: {}"
+SAVE_CONFIG_MSG = "SAVE_CONFIG - WRITE MEM PARA EL HOST: {}"
 
 GET_VERSION_CMD = 'show version'
 GET_CONFIG_CMD = 'show run'
@@ -92,6 +93,7 @@ class Ios(PlatformBase):
     def save_config(self) -> Result:
         r = self.task.run(
             task=netmiko_save_config,
+            name=SAVE_CONFIG_MSG.format(self.task.host),
             # severity_level=logging.DEBUG
             ).result
         return r
@@ -157,7 +159,8 @@ class Ios(PlatformBase):
             ).result
         return r
 
-    # TODO: remove exec timeout before making long tasks as it can get you out of the device before ending. Maybe it is handled already by nornir... need to check it.
+    # TODO: remove exec timeout before making long tasks as it can get you out
+    #  of the device before ending. Maybe it is handled already by nornir... need to check it.
     def remove_exec_timeout(self) -> Result:
         pass
 

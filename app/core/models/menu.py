@@ -27,7 +27,7 @@ class Menu(object):
     method_list = [method for method in dir(PlatformBase) if method.startswith('__') is False]
     templates = os.listdir(TEMPLATES_DIR)
 
-    def __init__(self) -> None:
+    def __init__(self, final_choices=None) -> None:
 
         # TODO: Redo this madness (but working)
         self.getters = {
@@ -46,7 +46,7 @@ class Menu(object):
             "w": self.save,
             "e": self.exit,
         }
-        self.final_choices = []
+        self.final_choices = final_choices or []
 
     def display_menu(self) -> None:
         os.system('clear')

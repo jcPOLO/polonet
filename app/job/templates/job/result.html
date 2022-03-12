@@ -32,7 +32,20 @@ Jobs
     </div>
     <div class="col p-3 border bg-light">
         <h3>OUTPUT</h3>
-        <div></div>
+        <div class="row">
+            <div class="col">
+            {% for task, hosts in tasks.items() %}
+                <p class="">TASK [{{ task }}] ****************</p>
+                {% for host in hosts %}
+                    <p class="host">{{ host.ip }} : {{ "FAILED" if host.failed else "OK"}}</p>
+                    <p class="collapse">{{ host.result }}</p>
+                    <p class="collapse">{{ host.diff }}</p>
+                    <p class="collapse">{{ host.changed }}</p>
+                    <p class="collapse">{{ host.stderr }}</p>
+                {% endfor %}
+            {% endfor %}
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}

@@ -15,7 +15,7 @@ class Template(object):
         result = []
         for template in self.templates:
             file = str(template)
-            path = f'./templates/{platform}/'
+            path = f'{dir_path}/../templates/{platform}/'
             filename = f'{path}{file}'
             with open(filename, 'r') as f:
                 lines = f.read()
@@ -25,7 +25,7 @@ class Template(object):
 
     def create_final_template(self, platform: str = 'ios') -> None:
         file = 'final.j2'
-        path = f'./templates/{platform}/'
+        path = f'{dir_path}/../templates/{platform}/'
         filename = f'{path}{file}'
 
         with open(filename, 'w') as f:

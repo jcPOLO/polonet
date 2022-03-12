@@ -108,6 +108,7 @@ def inventory(slug):
         if inventory:
             # get Device.__iter__() dict for every device in a dict container.
             session['inventory_name'] = inventory.name
+            session['inventory_id'] = inventory.id
             return render_template(
                 "inventory/inventory.html",
                 inventory=inventory,

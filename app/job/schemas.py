@@ -41,7 +41,7 @@ class JobSchema(ma.SQLAlchemyAutoSchema):
         user = User.query.filter_by(id=data['user_id']).first()
         data['status'] = status.message
         data['user'] = user.email
-        data.drop('user_id')
+        data.pop('user_id')
         return data
 
     @pre_load

@@ -19,10 +19,9 @@ def runner(client):
 
 
 def feed_db():
-    user = new_user()
     db.drop_all()
     db.create_all()
-    db.session.add(user)
+    new_user()
     db.session.commit()
     
 def new_user():
@@ -31,6 +30,9 @@ def new_user():
         first_name='Testeriano Testeos', 
         password=generate_password_hash('T3st3r1n0', method='sha256')
     )
+    db.session.add(new_user)
+    db.session.commit()
+    new_user = User.query.filter_by(email=new_user.email).first()
     new_user.inventories.append(new_inventory(new_user))
     return new_user
 
@@ -46,9 +48,11 @@ def new_inventory(new_user):
         """,
         user_id=new_user.id
     )
+    
     devices = new_devices(new_user)
     for device in devices:
         new_inventory.devices.append(device)
+    db.session.add(new_inventory)
     return new_inventory
 
 def new_devices(new_user):
@@ -60,6 +64,7 @@ def new_devices(new_user):
         custom=json.dumps({ 'site': 'zaragoza' }),
         user_id=new_user.id
     )
+    db.session.add(device)
     new_devices.append(device)
     device = Device(
         hostname='2.2.2.2',
@@ -68,6 +73,7 @@ def new_devices(new_user):
         custom=json.dumps({ 'site': 'huesca' }),
         user_id=new_user.id
     )
+    db.session.add(device)
     new_devices.append(device)
     device = Device(
         hostname='3.3.3.3',
@@ -76,6 +82,7 @@ def new_devices(new_user):
         custom=json.dumps({ 'site': 'teruel' }),
         user_id=new_user.id
     )
+    db.session.add(device)
     new_devices.append(device)
     return new_devices
 

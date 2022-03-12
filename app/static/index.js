@@ -183,3 +183,18 @@ if (document.readyState === "loading") {
         inventoryTable.createInventoryTable();
     }
 }
+
+// Toggle result host information
+const hosts = document.querySelectorAll('.host');
+hosts.forEach(host => {
+    host.addEventListener('click', function() {
+        // TODO: to do collapse of host task results info.
+        console.log('ocultar, desocultar');
+        p_childs = document.querySelectorAll('.collapse');
+        console.log(p_childs)
+        p_childs.forEach(e => {
+            console.log('show');
+            e.classList.toggle('show');
+      });
+    });
+});

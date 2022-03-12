@@ -13,7 +13,7 @@ from app.job.models import Job
 from app.job.schemas import JobSchema
 from app.core.helpers import dir_path, json_to_csv
 from app.core.core import Core
-from app.job.helper import print_result
+from nornir_utils.plugins.functions import print_result
 
 
 job_bp = Blueprint('job_bp', __name__, template_folder='templates')
@@ -61,14 +61,10 @@ def jobs():
         devices = session['devices']
         tasks = request.form.getlist('data')
         devices = json_to_csv(list(devices))
-        print(devices)
-
-        print('tasks: ', tasks)
-        print('devices: ', devices)
 
         core = Core(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
         data = dict(
-            inventory_id= session['inventory'],
+            inventory_id = session['inventory_id'],
             output = '',
             status=1,
         )
@@ -78,33 +74,40 @@ def jobs():
         db.session.commit()
         result = job_schema.dump(job)
 
-        output = print_result(results)
-        status = results.failed
-        # for device in results:
-        #     num_tasks = len(results[device])
-        #     for i in range(num_tasks - 1):
-        #         node = dict(
-        #             host = str(results[device][i].host),
-        #             name_task = str(results[device][i].name),
-        #             result_task = results[device][i].result,
-        #             has_failed = str(results[device][i].failed),
-        #             has_changed = str(results[device][i].changed),
-        #             diff = str(results[device][i].diff),
-        #             stderr = str(results[device][i].stderr),
-        #             exception = str(results[device][i].exception),
-        #         )
-        #         output.append(node)
-        # objects = ", ".join(
-        #     [
-        #         f'{{host: "{host}", success: {not v.failed}, task: "asdf"}}'
-        #         for host, v in results.items()
-        #     ]
-        # )
-        session['results'] = output
-        print(output)
+        result_tasks = { k: [] for k in tasks if '.j2' not in k }
+
+        print_result(results)
+        status = results.failed # True if at least 1 task failed
+
+        for host, tasks_result in sorted(results.items()):
+            for task in tasks_result:
+                task_name = str(task.name).split(' ')[0].lower()
+                if task_name in tasks or task_name == 'get_config' or 'plantilla' in task_name:
+                    taskres = {
+                        'result': task.result,
+                        'failed': task.failed,
+                        'ip': str(host),
+                        'changed': task.changed,
+                        'diff': task.diff,
+                        'stderr': task.stderr,
+                        # 'exception': task.exception
+                    }
+                    result_tasks[task_name] = result_tasks.get(task_name, [])
+                    result_tasks[task_name].append(taskres)
+
+        for task,hosts in result_tasks.items():
+            print(f'{task} ************')
+            for host in hosts:
+                if host['failed']:
+                    print(f"{host['ip']} : FAIL")
+                    # print(f"EXCEPTION: {host['exception']}")
+                else:
+                    print(f"{host['ip']} : OK")
+
         return render_template("job/result.html",
-                                user=current_user,
-                                status=status,
-                                session=session,
-                                result=result
-                                )
+                        user=current_user,
+                        status=status,
+                        session=session,
+                        result=result,
+                        tasks=result_tasks,
+                        )

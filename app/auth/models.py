@@ -1,6 +1,7 @@
 from app import db
 from flask_login import UserMixin
 from app.models import Base
+from app.job.models import Job
 
 
 class User(Base, UserMixin):

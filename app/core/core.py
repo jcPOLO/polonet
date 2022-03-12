@@ -57,13 +57,14 @@ class Core(object):
         # initialize Nornir object
         nr = InitNornir(config_file=CFG_FILE)
 
+        menu_obj = Menu(self.tasks)
+
         if self.cli:
             # show filter options menu and return device inventory filtered
             filter_obj = Filter(nr)
             devices = filter_obj.nr
 
             # show the main menu
-            menu_obj = Menu()
             self.tasks = menu_obj.run()
 
             # before executing the tasks, ask for device credentials
@@ -71,6 +72,8 @@ class Core(object):
             password = getpass.getpass()
         else:
             devices = nr
+            # create final.j2 if there are templates selected
+            self.tasks = menu_obj.apply()
 
         username = self.data.get('username') or username
         password = self.data.get('password') or password
