@@ -86,6 +86,8 @@ def jobs():
             for task in tasks_result:
                 task_name = str(task.name).split(' ')[0].lower()
                 if task_name in tasks or task_name == 'get_config' or 'plantilla' in task_name:
+                    if isinstance(task.result, str):
+                        task.result = task.result.split('\n')
                     taskres = {
                         'result': task.result,
                         'failed': task.failed,

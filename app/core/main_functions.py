@@ -1,6 +1,8 @@
 from nornir.core import Task
 from app.core.helpers import check_directory
-from app.core.tasks import backup_config, save_config, get_version, get_facts, basic_configuration, get_config_section, software_upgrade, set_rsa, get_dir
+from app.core.tasks import backup_config, save_config, get_version, \
+    get_facts, basic_configuration, get_config_section, software_upgrade, \
+    set_rsa, get_dir, send_command
 from typing import List
 # import configparser
 import logging
@@ -42,6 +44,12 @@ def container_task(
     if 'set_rsa' in selections:
         logger.info("set rsa_rsa selected")
         set_rsa(task)
+    # TODO: Implement the way to pass a command to execute in all hosts.
+    # but I am thinking this is not multiplatform possible. 
+    # Better just a grep of a config portion as it was before.
+    if 'send_command' in selections:
+        logger.info("send_command selected")
+        send_command(task)
 
 
 def session_log(task: Task, path: str = 'outputs/') -> str:

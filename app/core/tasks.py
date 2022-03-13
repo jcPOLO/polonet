@@ -88,3 +88,12 @@ def set_rsa(task: Task):
 def get_dir(task: Task):
     device = PlatformFactory().get_platform(task)
     return device.get_dir()
+
+def send_command(task: Task):
+    device = PlatformFactory().get_platform(task)
+    return device.send_command()
+
+# TODO: Hacer algo asi y quitar todo lo de encima
+# def get_factory(task: Task, method: callable):
+#     device = PlatformFactory().get_platform(task)
+#     return device.method()
