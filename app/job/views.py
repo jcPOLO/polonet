@@ -76,9 +76,12 @@ def jobs():
 
         result_tasks = { k: [] for k in tasks if '.j2' not in k }
 
+        # TODO: remove this. Just prints what nornir would print in CLI.
         print_result(results)
+
         status = results.failed # True if at least 1 task failed
 
+        # TODO: Exceptions are not serializable. Do a better thing in all of this.
         for host, tasks_result in sorted(results.items()):
             for task in tasks_result:
                 task_name = str(task.name).split(' ')[0].lower()
@@ -95,6 +98,7 @@ def jobs():
                     result_tasks[task_name] = result_tasks.get(task_name, [])
                     result_tasks[task_name].append(taskres)
 
+        # TODO: remove this. It is just to simulate what is going to be seen in results.html
         for task,hosts in result_tasks.items():
             print(f'{task} ************')
             for host in hosts:

@@ -37,11 +37,17 @@ Jobs
             {% for task, hosts in tasks.items() %}
                 <p class="">TASK [{{ task }}] ****************</p>
                 {% for host in hosts %}
-                    <p class="host">{{ host.ip }} : {{ "FAILED" if host.failed else "OK"}}</p>
-                    <p class="collapse">{{ host.result }}</p>
-                    <p class="collapse">{{ host.diff }}</p>
-                    <p class="collapse">{{ host.changed }}</p>
-                    <p class="collapse">{{ host.stderr }}</p>
+                <div class="toggler">{{ host.ip }} : <span>{{ "FAILED" if host.failed else "OK"}}</span></div>
+                <ul class="collapse">
+                    <li class="toggler">Result:</li>
+                        <p class="collapse">{{ host.result }}</p>
+                    <li class="toggler">Diff:</li>
+                        <p class="collapse">{{ host.diff }}</p>
+                    <li class="toggler">Changed:</li>
+                        <p class="collapse">{{ host.changed }}</p>
+                    <li class="toggler">Errors:</li>
+                        <p class="collapse">{{ host.stderr }}</p>
+                </ul>
                 {% endfor %}
             {% endfor %}
             </div>
