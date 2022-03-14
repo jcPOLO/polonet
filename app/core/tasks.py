@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Callable
 from nornir.core import Task
 from nornir_jinja2.plugins.tasks import template_file
 from nornir_netmiko.tasks import netmiko_send_config
@@ -12,16 +12,6 @@ import os
 TEMPLATES_DIR = dir_path+'/templates/'
 
 
-def get_interfaces_status(task: Task) -> List[Dict[str, str]]:
-    device = PlatformFactory().get_platform(task)
-    return device.get_interfaces_trunk()
-
-
-def get_version(task: Task):
-    device = PlatformFactory().get_platform(task)
-    return device.get_version()
-
-
 def backup_config(task: Task, path: str = 'backups/') -> None:
     r = ''
     file = f'{task.host}.cfg'
@@ -33,19 +23,6 @@ def backup_config(task: Task, path: str = 'backups/') -> None:
         with open(filename, 'w') as f:
             f.write(r)
 
-
-def save_config(task: Task) -> None:
-    device = PlatformFactory().get_platform(task)
-    device.save_config()
-
-
-def get_facts(task: Task):
-    device = PlatformFactory().get_platform(task)
-    return device.get_facts()
-
-def get_config_section(task: Task):
-    device = PlatformFactory().get_platform(task)
-    return device.get_config_section()
 
 def basic_configuration(
         task: Task,
@@ -72,28 +49,12 @@ def basic_configuration(
     task.host["config"] = r.result
     # Send final configuration template using netmiko
     task.run(task=netmiko_send_config,
-             name=f"APLICAR PLANTILLA PARA {task.host.platform}",
+             name=f"PLANTILLA APLICADA A {task.host.platform}",
              config_commands=task.host["config"].splitlines(),
              # severity_level=logging.DEBUG,
              )
 
-def software_upgrade(task: Task):
-    device = PlatformFactory().get_platform(task)
-    return device.software_upgrade()
 
-def set_rsa(task: Task):
+def get_factory(task: Task, method: str) -> Callable:
     device = PlatformFactory().get_platform(task)
-    return device.set_rsa()
-
-def get_dir(task: Task):
-    device = PlatformFactory().get_platform(task)
-    return device.get_dir()
-
-def send_command(task: Task):
-    device = PlatformFactory().get_platform(task)
-    return device.send_command()
-
-# TODO: Hacer algo asi y quitar todo lo de encima
-# def get_factory(task: Task, method: callable):
-#     device = PlatformFactory().get_platform(task)
-#     return device.method()
+    return getattr(device, method)()

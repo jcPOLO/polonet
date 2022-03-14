@@ -82,6 +82,7 @@ def jobs():
         status = results.failed # True if at least 1 task failed
 
         # TODO: Exceptions are not serializable. Do a better thing in all of this.
+        # TODO: Diff for jinja2 templates is not implemented (only napalm config have it)
         for host, tasks_result in sorted(results.items()):
             for task in tasks_result:
                 task_name = str(task.name).split(' ')[0].lower()

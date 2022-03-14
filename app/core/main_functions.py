@@ -1,8 +1,6 @@
 from nornir.core import Task
 from app.core.helpers import check_directory
-from app.core.tasks import backup_config, save_config, get_version, \
-    get_facts, basic_configuration, get_config_section, software_upgrade, \
-    set_rsa, get_dir, send_command
+from app.core.tasks import backup_config, basic_configuration, get_factory
 from typing import List
 # import configparser
 import logging
@@ -19,37 +17,17 @@ def container_task(
     session_log(task)
     # backup running config
     backup_config(task)
-
     # tasks
-    if 'get_version' in selections:
-        logger.info("get_version selected")
-        get_version(task)
-    if 'get_config_section' in selections:
-        get_config_section(task)
-    if 'get_facts' in selections:
-        logger.info("get_facts selected")
-        get_facts(task)
-    if 'get_dir' in selections:
-        logger.info("get_dir selected")
-        get_dir(task)
-    if 'save_config' in selections:
-        logger.info("save_config selected")
-        save_config(task)
-    if any('.j2' in s for s in selections):
-        logger.info("applying jinja2 template")
+    for action in selections:
+        if '.j2' not in action:
+            logger.info(f'Applying: {action}...')
+            get_factory(task, action)
+        else:
+            template = True
+
+    if template:
+        logger.info("Applying: jinja2 template")
         basic_configuration(task, FINAL_TEMPLATE)
-    if 'software_upgrade' in selections:
-        logger.info("software_upgrade selected")
-        software_upgrade(task)
-    if 'set_rsa' in selections:
-        logger.info("set rsa_rsa selected")
-        set_rsa(task)
-    # TODO: Implement the way to pass a command to execute in all hosts.
-    # but I am thinking this is not multiplatform possible. 
-    # Better just a grep of a config portion as it was before.
-    if 'send_command' in selections:
-        logger.info("send_command selected")
-        send_command(task)
 
 
 def session_log(task: Task, path: str = 'outputs/') -> str:
