@@ -28,11 +28,7 @@ class Device(object):
 
     # TODO: not the best way to create groups.
     def __init__(
-        self,
-        hostname: str,
-        platform: str ="ios",
-        port: str ="22",
-        **kwargs
+        self, hostname: str, platform: str = "ios", port: str = "22", **kwargs
     ):
         self.hostname = self.validate_hostname(hostname)
         self.platform = self.validate_platform(platform)

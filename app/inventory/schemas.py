@@ -161,7 +161,7 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
         exists = Inventory.query.filter_by(
             slug=slugify(a), user_id=current_user.id
         ).first()
-        if a in "< > | { / } \ , .".split():
+        if a in "< > | { / } , .".split():
             message = "name '{}' is not a valid. ".format(a)
             raise ValidationException("fail-config", message)
         if exists:

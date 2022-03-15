@@ -38,9 +38,7 @@ def test_home_user_logged(client):
     res = client.post(
         "/login",
         data=dict(
-            email="test@test.com",
-            password="T3st3r1n0",
-            csrf_token=csrf_token["value"]
+            email="test@test.com", password="T3st3r1n0", csrf_token=csrf_token["value"]
         ),
         follow_redirects=True,
     )

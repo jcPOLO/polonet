@@ -6,7 +6,6 @@ from app.core.helpers import check_directory, dir_path
 from app.core.models.platforms.platform_factory import PlatformFactory
 import configparser
 import logging
-import os
 
 
 TEMPLATES_DIR = dir_path + "/templates/"

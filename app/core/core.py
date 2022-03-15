@@ -33,11 +33,7 @@ class Core(object):
     """
 
     def __init__(
-        self, 
-        devices: Dict = None, 
-        tasks: List = None, 
-        cli: bool = True, 
-        **kwargs
+        self, devices: Dict = None, tasks: List = None, cli: bool = True, **kwargs
     ):
 
         self.devices = devices
