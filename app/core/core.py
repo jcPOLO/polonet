@@ -13,7 +13,7 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-CFG_FILE = f'{dir_path}/config.yaml'
+CFG_FILE = f"{dir_path}/config.yaml"
 
 
 class Core(object):
@@ -31,11 +31,12 @@ class Core(object):
         cli (bool): If should go web or cli
 
     """
+
     def __init__(
-        self,
-        devices: Dict = None,
-        tasks: List = None,
-        cli: bool = True,
+        self, 
+        devices: Dict = None, 
+        tasks: List = None, 
+        cli: bool = True, 
         **kwargs
     ):
 
@@ -43,7 +44,6 @@ class Core(object):
         self.tasks = tasks
         self.cli = cli
         self.data = kwargs or {}
-
 
     def run(self) -> None:
         # configure logger
@@ -75,18 +75,19 @@ class Core(object):
             # create final.j2 if there are templates selected
             self.tasks = menu_obj.apply()
 
-        username = self.data.get('username') or username
-        password = self.data.get('password') or password
+        username = self.data.get("username") or username
+        password = self.data.get("password") or password
 
         devices.inventory.defaults.password = password
         devices.inventory.defaults.username = username
 
         # Python program to show time by perf_counter()
         from time import perf_counter
+
         # Start the stopwatch / counter
         t1_start = perf_counter()
 
-        logger.info('----------- LOADING -----------\n')
+        logger.info("----------- LOADING -----------\n")
 
         result = self.main_task(devices, self.tasks)
 
@@ -104,11 +105,8 @@ class Core(object):
             while result.failed_hosts:
                 self.on_failed_host(devices, result)
                 retry = input("Do you want to retry tasks on failed hosts?[y/n]")
-                if retry == 'y':
-                    params = {
-                        'on_good': False,
-                        'on_failed': True
-                    }
+                if retry == "y":
+                    params = {"on_good": False, "on_failed": True}
                     result = self.main_task(devices, self.tasks, **params)
                     print_result(result)
                 else:
@@ -117,21 +115,24 @@ class Core(object):
             elapsed_time = t1_stop - t1_start
             print(
                 "Elapsed time during the whole program in seconds:",
-                '{0:.2f}'.format(elapsed_time))
+                "{0:.2f}".format(elapsed_time),
+            )
 
         return result
 
-    def main_task(self, devices: 'Nornir', selections: List, **kwargs) -> 'AggregatedResult':
+    def main_task(
+        self, devices: "Nornir", selections: List, **kwargs
+    ) -> "AggregatedResult":
         result = devices.run(
             task=container_task,
             selections=selections,
-            name=f'CONTAINER TASK',
+            name=f"CONTAINER TASK",
             # severity_level=logging.DEBUG,
-            **kwargs
+            **kwargs,
         )
         return result
 
-    def on_failed_host(self, devices: 'Nornir', result: 'AggregatedResult'):
+    def on_failed_host(self, devices: "Nornir", result: "AggregatedResult"):
         print(
             """
             Failed HOSTS:
@@ -140,20 +141,14 @@ class Core(object):
         )
         for host in result.failed_hosts:
             logger.error(
-                'Host: \x1b[1;31;40m{}\n{}\x1b[0m'.format(
+                "Host: \x1b[1;31;40m{}\n{}\x1b[0m".format(
                     host, devices.inventory.hosts[host].hostname
                 )
             )
             logger.error(
-                '|_Error: \x1b[0;31;40m{}\x1b[0m'.format(
-                    result[host][1].exception
-                )
+                "|_Error: \x1b[0;31;40m{}\x1b[0m".format(result[host][1].exception)
             )
-            logger.error(
-                '|_Task: {}'.format(
-                    result.failed_hosts[host]
-                )
-            )
+            logger.error("|_Task: {}".format(result.failed_hosts[host]))
 
         print(
             """

@@ -7,7 +7,7 @@ import logging
 from typing import List
 
 logger = logging.getLogger(__name__)
-TEMPLATES_DIR = f'{dir_path}/templates/ios/'
+TEMPLATES_DIR = f"{dir_path}/templates/ios/"
 
 
 class Menu(object):
@@ -24,17 +24,19 @@ class Menu(object):
     """
 
     configure_logging(logger)
-    method_list = [method for method in dir(PlatformBase) if method.startswith('__') is False]
+    method_list = [
+        method for method in dir(PlatformBase) if method.startswith("__") is False
+    ]
     templates = os.listdir(TEMPLATES_DIR)
 
     def __init__(self, final_choices=None) -> None:
 
         # TODO: Redo this madness (but working)
-        self.getters = {
-            i: self.method_list[i] for i in range(0, len(self.method_list))
-        }
+        self.getters = {i: self.method_list[i] for i in range(0, len(self.method_list))}
         self.templates = {
-            i+len(self.method_list): self.templates[i] for i in range(0, len(self.templates)) if self.templates[i] != 'final.j2'
+            i + len(self.method_list): self.templates[i]
+            for i in range(0, len(self.templates))
+            if self.templates[i] != "final.j2"
         }
         self.choices = self.getters.copy()
         self.choices.update(self.templates)
@@ -49,31 +51,37 @@ class Menu(object):
         self.final_choices = final_choices or []
 
     def display_menu(self) -> None:
-        os.system('clear')
-        print("""
+        os.system("clear")
+        print(
+            """
         Select the number one by one. When finished, press 'a' to run:
-        """)
+        """
+        )
         for k, v in self.getters.items():
             print("        {}. {}".format(k, v))
-        print("""
+        print(
+            """
         ---------------------------------- DANGER -------------------------------------
-        """)
+        """
+        )
         for k, v in self.templates.items():
             print("        {}. {}".format(k, v))
-        print("""
+        print(
+            """
         -------------------------------------------------------------------------------
 
         a. Apply      z. Clear selections     w. Save config.
         
         e. Exit
 
-        """)
+        """
+        )
         print(dir_path)
 
     def display_final_choices(self) -> None:
-        logger.info(f'Options selected: {self.final_choices}\n')
+        logger.info(f"Options selected: {self.final_choices}\n")
 
-    def run(self, msg='') -> callable:
+    def run(self, msg="") -> callable:
 
         self.display_menu()
         logger.info(msg)
@@ -97,7 +105,7 @@ class Menu(object):
     # TODO: all
     def apply(self) -> List:
         if self.final_choices:
-            if any('.j2' in s for s in self.final_choices):
+            if any(".j2" in s for s in self.final_choices):
                 all_templates = [s for s in self.final_choices if ".j2" in s]
                 logger.info("creating jinja2 final template")
                 t = Template(all_templates)
@@ -105,26 +113,28 @@ class Menu(object):
             logger.info(f"applied: -> {self.final_choices} <-")
             return self.final_choices
         else:
-            logger.error("{0} choices selected are not valid".format(self.final_choices))
+            logger.error(
+                "{0} choices selected are not valid".format(self.final_choices)
+            )
 
     def clear(self) -> None:
         self.final_choices = []
         self.run()
-        logger.info(f'Selected tasks cleared.\n')
+        logger.info(f"Selected tasks cleared.\n")
 
     def save(self) -> List:
         self.final_choices = []
-        result = input('Are you sure you want to execute a write config? [y]')
+        result = input("Are you sure you want to execute a write config? [y]")
         if result.lower().strip() not in ["yes", "y", "1", "ok", ""]:
             self.display_menu()
         else:
-            logger.info(f'Applying write config...\n')
-            self.final_choices = ['save_config']
+            logger.info(f"Applying write config...\n")
+            self.final_choices = ["save_config"]
             return self.final_choices
 
     def exit(self) -> None:
         self.final_choices = []
-        logger.info(f'Bye!\n')
+        logger.info(f"Bye!\n")
         sys.exit()
 
     def validate_selection(self, choice) -> int or str:
@@ -133,4 +143,3 @@ class Menu(object):
                 return int(choice)
         else:
             return choice
-

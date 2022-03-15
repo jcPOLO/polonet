@@ -17,6 +17,7 @@ def is_ip(string: str) -> bool:
     except ValueError:
         return False
 
+
 # Create dir if not exists
 def check_directory(path: str):
     if not os.path.exists(os.path.dirname(path)):
@@ -29,10 +30,15 @@ def check_directory(path: str):
 
 def is_int(v: any) -> bool:
     v = str(v).strip()
-    return v == '0' or (v if v.find('..') > -1 else v.lstrip('-+').rstrip('0').rstrip('.')).isdigit()
+    return (
+        v == "0"
+        or (
+            v if v.find("..") > -1 else v.lstrip("-+").rstrip("0").rstrip(".")
+        ).isdigit()
+    )
 
 
-def get_platforms(path='templates') -> list:
+def get_platforms(path="templates") -> list:
     if not os.path.exists(os.path.dirname(path)):
         try:
             return os.listdir(path)
@@ -40,13 +46,13 @@ def get_platforms(path='templates') -> list:
             raise e
 
 
-def configure_logging(logger, debug=''):
+def configure_logging(logger, debug=""):
     if debug:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
     ch = logging.StreamHandler(sys.stdout)
-    fh = logging.FileHandler(f'{dir_path}/auto-nornir.log')
+    fh = logging.FileHandler(f"{dir_path}/auto-nornir.log")
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
@@ -59,7 +65,7 @@ def configure_logging(logger, debug=''):
 
 
 class HumanBytes:
-    '''
+    """
     USAGE
         print(HumanBytes.format(2251799813685247)) # 2 pebibytes
         print(HumanBytes.format(2000000000000000, True)) # 2 petabytes
@@ -69,14 +75,30 @@ class HumanBytes:
         print(HumanBytes.format(4318498233, precision=3)) # 4.022 gibibytes
         print(HumanBytes.format(4318498233, True, 3)) # 4.318 gigabytes
         print(HumanBytes.format(-4318498233, precision=2)) # -4.02 gibibytes
-    '''
+    """
+
     METRIC_LABELS: List[str] = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-    BINARY_LABELS: List[str] = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
-    PRECISION_OFFSETS: List[float] = [0.5, 0.05, 0.005, 0.0005] # PREDEFINED FOR SPEED.
-    PRECISION_FORMATS: List[str] = ["{}{:.0f} {}", "{}{:.1f} {}", "{}{:.2f} {}", "{}{:.3f} {}"] # PREDEFINED FOR SPEED.
+    BINARY_LABELS: List[str] = [
+        "B",
+        "KiB",
+        "MiB",
+        "GiB",
+        "TiB",
+        "PiB",
+        "EiB",
+        "ZiB",
+        "YiB",
+    ]
+    PRECISION_OFFSETS: List[float] = [0.5, 0.05, 0.005, 0.0005]  # PREDEFINED FOR SPEED.
+    PRECISION_FORMATS: List[str] = [
+        "{}{:.0f} {}",
+        "{}{:.1f} {}",
+        "{}{:.2f} {}",
+        "{}{:.3f} {}",
+    ]  # PREDEFINED FOR SPEED.
 
     @staticmethod
-    def format(num: Union[int, float], metric: bool=False, precision: int=1) -> str:
+    def format(num: Union[int, float], metric: bool = False, precision: int = 1) -> str:
         """
         Human-readable formatting of bytes, using binary (powers of 1024)
         or metric (powers of 1000) representation.
@@ -84,7 +106,9 @@ class HumanBytes:
 
         assert isinstance(num, (int, float)), "num must be an int or float"
         assert isinstance(metric, bool), "metric must be a bool"
-        assert isinstance(precision, int) and precision >= 0 and precision <= 3, "precision must be an int (range 0-3)"
+        assert (
+            isinstance(precision, int) and precision >= 0 and precision <= 3
+        ), "precision must be an int (range 0-3)"
 
         unit_labels = HumanBytes.METRIC_LABELS if metric else HumanBytes.BINARY_LABELS
         last_label = unit_labels[-1]
@@ -92,7 +116,7 @@ class HumanBytes:
         unit_step_thresh = unit_step - HumanBytes.PRECISION_OFFSETS[precision]
 
         is_negative = num < 0
-        if is_negative: # Faster than ternary assignment or always running abs().
+        if is_negative:  # Faster than ternary assignment or always running abs().
             num = abs(num)
 
         for unit in unit_labels:
@@ -111,7 +135,10 @@ class HumanBytes:
                 # and further down in the decimals, so it doesn't matter at all.
                 num /= unit_step
 
-        return HumanBytes.PRECISION_FORMATS[precision].format("-" if is_negative else "", num, unit)
+        return HumanBytes.PRECISION_FORMATS[precision].format(
+            "-" if is_negative else "", num, unit
+        )
+
 
 # TODO: This is not good at all. Only works on not nested jsons
 def json_to_csv(js):
@@ -121,16 +148,17 @@ def json_to_csv(js):
         keys.append(key)
     for host in js:
         for key in keys:
-            if key != 'groups':
+            if key != "groups":
                 csv.append(str(host[key]))
-                csv.append(',')
+                csv.append(",")
         csv.pop()
-        csv.append('\n')
+        csv.append("\n")
 
-    csv = ''.join(csv)
-    keys = ','.join(keys) + '\n'
+    csv = "".join(csv)
+    keys = ",".join(keys) + "\n"
     csv_text = keys + csv
     return csv_text
+
 
 def csv_to_json(csv_text):
     reader = csv.DictReader(io.StringIO(csv_text))

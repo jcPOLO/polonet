@@ -41,8 +41,9 @@ class Filter:
 
     @staticmethod
     def display_menu() -> None:
-        os.system('clear')
-        print("""
+        os.system("clear")
+        print(
+            """
            Filter by:
 
            1. Platform
@@ -55,22 +56,23 @@ class Filter:
 
            e. Exit
 
-           """)
+           """
+        )
 
     @staticmethod
-    def devices_filtered(self, text='All devices selected:') -> str:
-        msg = text + '\n'
+    def devices_filtered(self, text="All devices selected:") -> str:
+        msg = text + "\n"
         i = 0
         for device in self.nr.inventory.hosts:
             i += 1
-            msg += f' \
+            msg += f" \
                 {i} \
                 {self.nr.inventory.hosts[device].platform} \
                 {self.nr.inventory.hosts[device].name} \
-                {self.nr.inventory.hosts[device].hostname}\n'
+                {self.nr.inventory.hosts[device].hostname}\n"
         return msg
 
-    def run(self, msg='') -> None:
+    def run(self, msg="") -> None:
         self.display_menu()
         if msg:
             print(msg)
@@ -90,11 +92,11 @@ class Filter:
     def clear(self) -> None:
         self.nr = self.initial_nr
         self.run()
-        print(f'All filters cleared.\n')
+        print(f"All filters cleared.\n")
 
     @staticmethod
     def exit() -> None:
-        print(f'Bye!\n')
+        print(f"Bye!\n")
         sys.exit()
 
     def by_platform(self):
@@ -105,14 +107,12 @@ class Filter:
         for host in nr.inventory.hosts.values():
             platforms.add(host.platform)
 
-        platform = input(
-            f"Platform to filter by: - {', '.join(platforms)}:"
-        ).lower()
+        platform = input(f"Platform to filter by: - {', '.join(platforms)}:").lower()
 
         if platform in platforms:
             devices = nr.filter(F(platform=platform))
             self.nr = devices
-            msg = self.devices_filtered(self, 'Filtered by {platform}:')
+            msg = self.devices_filtered(self, "Filtered by {platform}:")
             self.run(msg)
         else:
             msg = self.devices_filtered(self)
@@ -131,7 +131,7 @@ class Filter:
         if hostname in hostnames:
             devices = nr.filter(F(hostname=hostname))
             self.nr = devices
-            msg = self.devices_filtered(self, 'Filtered by IP:')
+            msg = self.devices_filtered(self, "Filtered by IP:")
             self.run(msg)
 
         else:
@@ -149,14 +149,12 @@ class Filter:
             for host in nr.inventory.hosts.values():
                 values.add(host[field])
 
-            value = input(
-                f"{field} to filter by: - {', '.join(values)}:"
-            ).lower()
+            value = input(f"{field} to filter by: - {', '.join(values)}:").lower()
 
             if value in values:
                 devices = nr.filter(F(**{field: str(value)}))
                 self.nr = devices
-                msg = self.devices_filtered(self, 'Filtered by {field}')
+                msg = self.devices_filtered(self, "Filtered by {field}")
                 self.run(msg)
 
         else:

@@ -3,7 +3,7 @@ from app.core.helpers import is_ip
 
 
 # supported platforms at the moment
-PLATFORMS = ['ios', 'nxos']
+PLATFORMS = ["ios", "nxos"]
 
 
 class Device(object):
@@ -22,16 +22,17 @@ class Device(object):
         platforms (list): Total device platforms registered in inventory.
 
     """
+
     devices = []
     platforms = []
 
     # TODO: not the best way to create groups.
     def __init__(
-            self,
-            hostname,
-            platform='ios',
-            port='22',
-            **kwargs
+        self,
+        hostname: str,
+        platform: str ="ios",
+        port: str ="22",
+        **kwargs
     ):
         self.hostname = self.validate_hostname(hostname)
         self.platform = self.validate_platform(platform)
@@ -49,8 +50,10 @@ class Device(object):
         a = a.strip()
         platforms = PLATFORMS
         if a not in platforms:
-            platforms_str = ', '.join(platforms)
-            message = "platform '{}' is not in a supported. Supported: {}".format(a, platforms_str)
+            platforms_str = ", ".join(platforms)
+            message = "platform '{}' is not in a supported. Supported: {}".format(
+                a, platforms_str
+            )
             raise ValidationException("fail-config", message)
         return a
 
@@ -96,13 +99,11 @@ class Device(object):
 
     def _device_dict(self):
         return {
-            'hostname': self.hostname,
-            'platform': self.platform,
-            'port': self.port,
-            'groups': [
-                self.platform
-            ],
-            'data': self.data
+            "hostname": self.hostname,
+            "platform": self.platform,
+            "port": self.port,
+            "groups": [self.platform],
+            "data": self.data,
         }
 
     def no_groups(self):
@@ -110,11 +111,11 @@ class Device(object):
             # remove empty attributes
             if v:
                 # custom keys inside data are shown, data key is not shown.
-                if k == 'data':
+                if k == "data":
                     for a, b in self._device_dict()[k].items():
                         yield a, b
                 # do not return groups column either
-                elif k == 'groups':
+                elif k == "groups":
                     pass
                 else:
                     yield k, v
@@ -124,7 +125,7 @@ class Device(object):
             # remove empty attributes
             if v:
                 # custom keys inside data are shown, data key is not shown.
-                if k == 'data':
+                if k == "data":
                     for a, b in self._device_dict()[k].items():
                         yield a, b
                 # do not return groups column either

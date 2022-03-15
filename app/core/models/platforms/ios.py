@@ -1,4 +1,8 @@
-from nornir_netmiko.tasks import netmiko_send_command, netmiko_save_config, netmiko_file_transfer
+from nornir_netmiko.tasks import (
+    netmiko_send_command,
+    netmiko_save_config,
+    netmiko_file_transfer,
+)
 from nornir.core.task import Result, Task
 from typing import List, Dict
 from app.core.models.platform import PlatformBase
@@ -17,13 +21,13 @@ GET_INTERFACES_TRUNK_MSG = "SHOW INTERFACE TRUNK PARA EL HOST: {}"
 GET_DIR_MSG = "GET_DIR - DIR FLASH:/ PARA EL HOST: {}"
 SAVE_CONFIG_MSG = "SAVE_CONFIG - WRITE MEM PARA EL HOST: {}"
 
-GET_VERSION_CMD = 'show version'
-GET_CONFIG_CMD = 'show run'
-GET_INTERFACES_STATUS_CMD = 'show interfaces status'
-GET_INTERFACES_TRUNK_CMD = 'show interfaces trunk'
-GET_INTERFACES_DESCRIPTION_CMD = 'show interface {}'
-GET_NEIGHBORS_CMD = 'show cdp nei {} det'
-GET_DIR_CMD = 'dir'
+GET_VERSION_CMD = "show version"
+GET_CONFIG_CMD = "show run"
+GET_INTERFACES_STATUS_CMD = "show interfaces status"
+GET_INTERFACES_TRUNK_CMD = "show interfaces trunk"
+GET_INTERFACES_DESCRIPTION_CMD = "show interface {}"
+GET_NEIGHBORS_CMD = "show cdp nei {} det"
+GET_DIR_CMD = "dir"
 
 
 class Ios(PlatformBase):
@@ -38,7 +42,7 @@ class Ios(PlatformBase):
             command_string=GET_VERSION_CMD,
             use_textfsm=True,
             # severity_level=logging.DEBUG,
-            ).result
+        ).result
         return r
 
     def get_config(self) -> str:
@@ -47,7 +51,7 @@ class Ios(PlatformBase):
             name=GET_CONFIG_MSG.format(self.task.host, self.task.host.hostname),
             command_string=GET_CONFIG_CMD,
             severity_level=logging.DEBUG,
-            ).result
+        ).result
         return r
 
     def get_interfaces_status(self) -> List[Dict[str, str]]:
@@ -57,7 +61,7 @@ class Ios(PlatformBase):
             command_string=GET_INTERFACES_STATUS_CMD,
             use_textfsm=True,
             # severity_level=logging.DEBUG,
-            ).result
+        ).result
         return r
 
     def get_interfaces_trunk(self) -> List[Dict[str, str]]:
@@ -67,7 +71,7 @@ class Ios(PlatformBase):
             command_string=GET_INTERFACES_TRUNK_CMD,
             use_textfsm=True,
             # severity_level=logging.DEBUG,
-            ).result
+        ).result
         return r
 
     def get_interface_description(self, interface: str) -> List[Dict[str, str]]:
@@ -77,7 +81,7 @@ class Ios(PlatformBase):
             command_string=GET_INTERFACES_DESCRIPTION_CMD.format(interface),
             use_textfsm=True,
             # severity_level=logging.DEBUG,
-            ).result
+        ).result
         return r
 
     # TODO: this and this return type
@@ -86,8 +90,8 @@ class Ios(PlatformBase):
             task=netmiko_send_command,
             name=GET_NEIGHBORS_MSG.format(interface),
             command_string=GET_NEIGHBORS_CMD.format(interface),
-            use_textfsm=True
-            ).result
+            use_textfsm=True,
+        ).result
         return r
 
     def save_config(self) -> Result:
@@ -95,16 +99,16 @@ class Ios(PlatformBase):
             task=netmiko_save_config,
             name=SAVE_CONFIG_MSG.format(self.task.host),
             # severity_level=logging.DEBUG
-            ).result
+        ).result
         return r
 
-    def get_config_section(self) ->  str:
+    def get_config_section(self) -> str:
         r = self.task.run(
             task=netmiko_send_command,
             name=GET_CONFIG_MSG.format(self.task.host, self.task.host.hostname),
-            command_string=f'{GET_CONFIG_CMD} | i 213.229.183',
+            command_string=f"{GET_CONFIG_CMD} | i 213.229.183",
             # severity_level=logging.DEBUG,
-            ).result
+        ).result
         return r
 
     def set_rsa(self) -> Result:
@@ -115,17 +119,24 @@ class Ios(PlatformBase):
             # logger = logging.getLogger("netmiko")
 
             # Manually create Netmiko connection. Needs fast_cli to False in nornir groups.yaml - ios netmiko extra option
-            net_connect = self.task.host.get_connection("netmiko", self.task.nornir.config)
+            net_connect = self.task.host.get_connection(
+                "netmiko", self.task.nornir.config
+            )
             output = net_connect.config_mode()
-            output += net_connect.send_command("crypto key zeroize rsa", expect_string=r"you really want to remove")
+            output += net_connect.send_command(
+                "crypto key zeroize rsa", expect_string=r"you really want to remove"
+            )
             output += net_connect.send_command("y", expect_string=r"#")
-            output += net_connect.send_command("crypto key generate rsa modulus 2048", expect_string=r"OK")
+            output += net_connect.send_command(
+                "crypto key generate rsa modulus 2048", expect_string=r"OK"
+            )
             output += net_connect.exit_config_mode()
             return output
+
         r = self.task.run(
             task=netmiko_send_task,
             # severity_level=logging.DEBUG,
-            ).result
+        ).result
         return r
 
     # @staticmethod
@@ -137,13 +148,13 @@ class Ios(PlatformBase):
 
     # netmiko checks the md5 signature after upload with a different ssh control session than the scp one.
     def software_upgrade(self) -> Result:
-        source_file = self.task.host.get('image')
-        dest_file = self.task.host.get('image')
+        source_file = self.task.host.get("image")
+        dest_file = self.task.host.get("image")
         r = self.task.run(
             name=f"CHECKING SPACE AVAILABLE IN {self.task.host.name} FOR {self.task.host.get('image')}",
             task=self.has_free_space,
             # severity_level=logging.DEBUG,
-            )
+        )
         # r = self.task.run(
         #     name=f"IMAGE UPLOAD TO HOST: {self.task.host.name}",
         #     task=self.polo,
@@ -155,8 +166,8 @@ class Ios(PlatformBase):
             task=netmiko_file_transfer,
             source_file=source_file,
             dest_file=dest_file,
-            direction='put'
-            ).result
+            direction="put",
+        ).result
         return r
 
     # TODO: remove exec timeout before making long tasks as it can get you out
@@ -171,19 +182,23 @@ class Ios(PlatformBase):
             command_string=GET_DIR_CMD,
             use_textfsm=True,
             severity_level=logging.DEBUG,
-            ).result
+        ).result
         return r
 
     def has_free_space(self, task) -> str:
         r = self.get_dir()
-        space_available = float(r[0]['total_free'] if 'flash' in r[0].get('file_system') else "error")
-        total_size = float(r[0]['total_size'] if 'flash' in r[0].get('file_system') else "error")
-        source_file = task.host.get('image')
+        space_available = float(
+            r[0]["total_free"] if "flash" in r[0].get("file_system") else "error"
+        )
+        total_size = float(
+            r[0]["total_size"] if "flash" in r[0].get("file_system") else "error"
+        )
+        source_file = task.host.get("image")
         file_size = float(os.stat(source_file).st_size)
         if space_available > file_size * 2:
             return Result(
                 host=task.host,
-                result=f"Space needed: {HumanBytes.format(file_size)}\nFree space: {HumanBytes.format(space_available)}"
+                result=f"Space needed: {HumanBytes.format(file_size)}\nFree space: {HumanBytes.format(space_available)}",
             )
         else:
             message = f"ERROR:\n \
