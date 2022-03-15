@@ -61,5 +61,10 @@ Jobs
             </div>
         </div>
     </div>
+    <div class="container">
+        {% for line in output %}
+            <p>{{ line }}</p>
+        {% endfor %}
+    </div>
 </section>
 {% endblock %}

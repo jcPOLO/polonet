@@ -1,7 +1,6 @@
 from crypt import methods
 from datetime import datetime
 import json
-import os
 import logging
 from typing import Dict, List
 from flask import (
@@ -80,6 +79,7 @@ def jobs():
         tasks = request.form.getlist("data")
         devices = json_to_csv(list(devices))
 
+        # TODO: I have to do a way to chose credentials to pass them
         core = Core(
             csv_text=devices, tasks=tasks, cli=False, username="cisco", password="cisco"
         )
@@ -97,10 +97,16 @@ def jobs():
         result_tasks = {k: [] for k in tasks if ".j2" not in k}
 
         # TODO: remove this. Just prints what nornir would print in CLI.
-        print_result(results)
+        from app.job.helper import print_result
+
+        # TODO: implement a way to toggle between ansible like result or nornir like result
+        output = print_result(results, return_output=True)
+        if isinstance(output, str):
+            output = output.split("\n")
 
         status = results.failed  # True if at least 1 task failed
 
+        # Ansible like result
         # TODO: Exceptions are not serializable. Do a better thing in all of this.
         # TODO: Diff for jinja2 templates is not implemented (only napalm config have it)
         for host, tasks_result in sorted(results.items()):
@@ -142,4 +148,5 @@ def jobs():
             session=session,
             result=result,
             tasks=result_tasks,
+            output=output,
         )
