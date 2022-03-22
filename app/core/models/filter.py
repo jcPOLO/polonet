@@ -134,16 +134,18 @@ class Filter:
             hostnames.add(host.hostname)
 
         hostname = input(f"IP to filter by: - {', '.join(hostnames)}:").lower()
-
-        if hostname in hostnames:
+        if "," in hostname:
+            hostname_list = [host.strip() for host in hostname.split(",")]
+            devices = nr.filter(filter_func=lambda h: h.name in hostname_list)
+            self.nr = devices
+            msg = self.devices_filtered(self, "Filtered by IPs:")
+        elif hostname in hostnames:
             devices = nr.filter(F(hostname=hostname))
             self.nr = devices
             msg = self.devices_filtered(self, "Filtered by IP:")
-            self.run(msg)
-
         else:
             msg = self.devices_filtered(self)
-            self.run(msg)
+        self.run(msg)
 
     def by_field(self):
         field = input(f"Field to filter by: - {', '.join(self.keys)}:").lower()

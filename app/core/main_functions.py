@@ -16,6 +16,7 @@ def container_task(task: Task, selections: List) -> None:
     # backup running config
     backup_config(task)
     # tasks
+    template = False
     for action in selections:
         if ".j2" not in action:
             logger.info(f"Applying: {action}...")

@@ -32,7 +32,7 @@ class Menu(object):
     ]
     templates = os.listdir(TEMPLATES_DIR)
 
-    def __init__(self, final_choices: List = []) -> None:
+    def __init__(self, final_choices: List = None) -> None:
 
         # TODO: Redo this madness (but working)
         self.getters = {i: self.method_list[i] for i in range(0, len(self.method_list))}
@@ -51,7 +51,7 @@ class Menu(object):
             "w": self.save,
             "e": self.exit,
         }
-        self.final_choices = final_choices
+        self.final_choices = final_choices or []
 
     def display_menu(self) -> None:
         os.system("clear")
@@ -141,7 +141,7 @@ class Menu(object):
 
     def validate_selection(self, choice) -> int or str:
         if is_int(choice):
-            if int(choice) < (len(self.choices) + 1) and int(choice) > 0:
+            if int(choice) < (len(self.choices) + 1) and int(choice) >= 0:
                 return int(choice)
         else:
             return choice
