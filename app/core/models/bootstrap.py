@@ -25,7 +25,7 @@ class Bootstrap(object):
     Attributes:
         groups (list): Associated group belonged
         data (dict): Extra data associated to the device
-        devices (list): Device object generator counter
+        devices (dict): Device object generator counter
         platforms (list): Total device platforms registered in inventory.
 
     """

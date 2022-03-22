@@ -14,6 +14,9 @@ class Menu(object):
     """
     Class for displaying and executing the available tasks.
 
+    Args:
+        final_choices (list): All tasks selected to be executed.
+
     Attributes:
         getters (dict): All platform based device tasks available.
         templates (dict): All jinja2 template files available.
@@ -29,7 +32,7 @@ class Menu(object):
     ]
     templates = os.listdir(TEMPLATES_DIR)
 
-    def __init__(self, final_choices=None) -> None:
+    def __init__(self, final_choices: List = []) -> None:
 
         # TODO: Redo this madness (but working)
         self.getters = {i: self.method_list[i] for i in range(0, len(self.method_list))}
@@ -48,7 +51,7 @@ class Menu(object):
             "w": self.save,
             "e": self.exit,
         }
-        self.final_choices = final_choices or []
+        self.final_choices = final_choices
 
     def display_menu(self) -> None:
         os.system("clear")
@@ -102,7 +105,6 @@ class Menu(object):
             else:
                 logger.error("{0} is not a valid choice".format(choice))
 
-    # TODO: all
     def apply(self) -> List:
         if self.final_choices:
             if any(".j2" in s for s in self.final_choices):
@@ -139,7 +141,7 @@ class Menu(object):
 
     def validate_selection(self, choice) -> int or str:
         if is_int(choice):
-            if int(choice) < (len(self.choices) + 1):
+            if int(choice) < (len(self.choices) + 1) and int(choice) > 0:
                 return int(choice)
         else:
             return choice

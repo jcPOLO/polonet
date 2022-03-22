@@ -1,6 +1,6 @@
 from nornir import InitNornir
 from nornir.core import Nornir
-from nornir.core.task import AggregatedResult
+from nornir.core.task import AggregatedResult, MultiResult
 from nornir_utils.plugins.functions import print_result
 from app.core.main_functions import container_task
 from app.core.models.menu import Menu
@@ -41,7 +41,7 @@ class Core(object):
         self.cli = cli
         self.data = kwargs or {}
 
-    def run(self) -> None:
+    def run(self) -> MultiResult:
         # configure logger
         configure_logging(logger)
 

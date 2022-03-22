@@ -1,5 +1,6 @@
 from nornir.core.filter import F
 from app.core.models.device import Device
+from tabulate import tabulate
 import os
 import sys
 
@@ -62,14 +63,20 @@ class Filter:
     @staticmethod
     def devices_filtered(self, text="All devices selected:") -> str:
         msg = text + "\n"
+        table_header = ["id", "platform", "hostname", "port"]
+        table = []
+
         i = 0
         for device in self.nr.inventory.hosts:
             i += 1
-            msg += f" \
-                {i} \
-                {self.nr.inventory.hosts[device].platform} \
-                {self.nr.inventory.hosts[device].name} \
-                {self.nr.inventory.hosts[device].hostname}\n"
+            row = [
+                i,
+                str(self.nr.inventory.hosts[device].platform),
+                str(self.nr.inventory.hosts[device].hostname),
+                str(self.nr.inventory.hosts[device].port),
+            ]
+            table.append(row)
+        msg += tabulate(table, headers=table_header, tablefmt="fancy_grid")
         return msg
 
     def run(self, msg="") -> None:
