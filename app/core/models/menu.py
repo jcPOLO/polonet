@@ -28,18 +28,18 @@ class Menu(object):
 
     configure_logging(logger)
     method_list = [
-        method for method in dir(PlatformBase) if method.startswith("__") is False
+        method
+        for method in dir(PlatformBase)
+        if method.startswith("__") is False and method.startswith("_") is False
     ]
     templates = os.listdir(TEMPLATES_DIR)
 
     def __init__(self, final_choices: List = None) -> None:
-
-        # TODO: Redo this madness (but working)
-        self.getters = {i: self.method_list[i] for i in range(0, len(self.method_list))}
+        self.getters = {k: v for k, v in enumerate(self.method_list)}
         self.templates = {
-            i + len(self.method_list): self.templates[i]
-            for i in range(0, len(self.templates))
-            if self.templates[i] != "final.j2"
+            k + len(self.method_list): v
+            for k, v in enumerate(self.templates)
+            if v != "final.j2"
         }
         self.choices = self.getters.copy()
         self.choices.update(self.templates)
