@@ -58,6 +58,6 @@ flask db upgrade
 python app.py
 ````
 
-Open http://localhost:3000
+Open http://127.0.0.1:5000/
 
 It should not be needed, but in case tasks using jinja2 templates are failing, probably you will need to manually set the NET_TEXTFSM environment variable pointing to the ntc-templates/templates directory path.
