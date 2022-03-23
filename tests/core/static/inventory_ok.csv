@@ -1,0 +1,4 @@
+hostname,port,platform,site
+1.1.1.1,22,ios,zaragoza
+2.2.2.2,23,nxos,teruel
+3.3.3.3,22,ios,huesca

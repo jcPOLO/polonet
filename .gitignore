@@ -12,6 +12,7 @@
 .global.ini
 *hosts.yaml
 *final.j2
+!inventory_ok.csv
 *.csv.*
 app.db
 
