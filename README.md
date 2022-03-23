@@ -2,12 +2,12 @@
 # polonet
 
 ## Prerequisites
-Install Git:
-  https://git-scm.com/downloads
-Install Python > 3.7:
-  https://www.python.org/downloads/
-Install Poetry
-  https://python-poetry.org/docs/#installation
+- Install Git:  
+https://git-scm.com/downloads
+- Install Python > 3.7:  
+https://www.python.org/downloads/
+- Install Poetry  
+https://python-poetry.org/docs/#installation
 
 ### Linux Ubuntu
 In Terminal:
@@ -23,7 +23,7 @@ poetry shell
 ```
 
 ### Windows 10
-Prerequisites done.
+Prerequisites done.  
 In powershell or cmd:
 ```
 git clone https://github.com/jcPOLO/polonet.git
