@@ -1,38 +1,48 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 # polonet
 
-# Para el entorno de test es necesario poder llegar desde la maquina hasta el EVE-NG
-todo esto es para acordarme yo, poco uso para ti tiene este readme
+## Prerequisites
+Install Git:
+  https://git-scm.com/downloads
+Install Python > 3.7:
+  https://www.python.org/downloads/
+Install Poetry
+  https://python-poetry.org/docs/#installation
 
-Uso el lab FW VPN ASA prueba.unl
+### Linux Ubuntu
+In Terminal:
+```
+sudo add-apt-repository ppa:git-core/ppa
+sudo apt update
+sudo apt install git
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+git clone https://github.com/jcPOLO/polonet.git
+cd polonet
+poetry install
+poetry shell
+```
 
-Tengo que levantar los cacharros:
+### Windows 10
+Prerequisites done.
+In powershell or cmd:
+```
+git clone https://github.com/jcPOLO/polonet.git
+cd polonet
+poetry install
+poetry shell
+```
+## CLI version
+```
+python app.py <inventory csv file>
+```
+## WEB version
+```
+flask db init
+flask db migrate -m "Initial migration."
+flask db upgrade
+python app.py
+````
 
-- Sustituto_A10
-- Sustituto_Firewall
-- R1
-- R2
-- R3
-- R11 (coreswitch)
+Open http://localhost:3000
 
-A los dos que tengo acceso son Sustituto_A10 y R1.
-Para llegar, tengo que meter rutas estaticas hasta los cacharros en la maquina
-que apunten al EVE-NG
-
-En windows:
-
-- route add 198.18.18.49 mask 255.255.255.255 192.168.1.90
-- route add 198.18.18.10 mask 255.255.255.255 192.168.1.90
-
-En linux:
-
-- route add -host 198.18.18.49 gw 192.168.1.90
-- route add -host 198.18.18.10 gw 192.168.1.90
-
-Siendo 198.18.18.49 el R1, la .10 el A10 y 192.168.1.90 la IP del EVE-NG
-
-En la parte de EVE-NG tengo levantado un cloud sirviendo DHCP en la red:
-
-198.18.18.0/24
-
-R1 natea todas las redes internas del lab a su pata en la 198.18.18.49 para dar acceso a internet (overload)
+It should not be needed, but in case tasks using jinja2 templates are failing, probably you will need to manually set the NET_TEXTFSM environment variable pointing to the ntc-templates/templates directory path.
