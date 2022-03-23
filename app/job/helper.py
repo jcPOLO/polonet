@@ -1,29 +1,20 @@
 import logging
 import pprint
 import threading
-from typing import List, cast
+from typing import List, Optional, cast
 from collections import OrderedDict
 import json
-
+import sys
+from io import StringIO
 from colorama import Fore, Style, init
-
+from typing import Union
 from nornir.core.task import AggregatedResult, MultiResult, Result
-
-
-class Result(object):
-
-    def __init__(self, result: AggregatedResult):
-        self.result = result
-
-    
-    def get_failed_host(self) -> list:
-        for host, v in self.result.items():
-            if v.failed:
-                yield host 
 
 
 LOCK = threading.Lock()
 
+# String buffer stream to use in case formatted string output is needed.
+OUT_BUFFER = StringIO()
 
 init(autoreset=True, strip=False)
 
@@ -48,12 +39,20 @@ def _get_color(result: Result, failed: bool) -> str:
 
 def _print_individual_result(
     result: Result,
+    host: Optional[str],
     attrs: List[str],
     failed: bool,
     severity_level: int,
     task_group: bool = False,
-    print_host: bool = False,
-) -> None:
+    return_output: bool = False,
+):
+    global OUT_BUFFER
+    out_buffer = None
+    if return_output:
+        out_buffer = OUT_BUFFER
+    else:
+        out_buffer = sys.stdout
+
     if result.severity_level < severity_level:
         return
 
@@ -63,45 +62,52 @@ def _print_individual_result(
     )
     level_name = logging.getLevelName(result.severity_level)
     symbol = "v" if task_group else "-"
-    host = (
-        f"{result.host.name}: "
-        if (print_host and result.host and result.host.name)
-        else ""
-    )
-    msg = "{} {}{}{}".format(symbol * 4, host, result.name, subtitle)
+    msg = "{} {}{}".format(symbol * 4, result.name, subtitle)
     print(
         "{}{}{}{} {}".format(
             Style.BRIGHT, color, msg, symbol * (80 - len(msg)), level_name
-        )
+        ),
+        file=out_buffer,
     )
     for attribute in attrs:
         x = getattr(result, attribute, "")
         if isinstance(x, BaseException):
             # for consistency between py3.6 and py3.7
-            print(f"{x.__class__.__name__}{x.args}")
+            print(f"{x.__class__.__name__}{x.args}", file=out_buffer)
         elif x and not isinstance(x, str):
             if isinstance(x, OrderedDict):
-                print(json.dumps(x, indent=2))
+                print(json.dumps(x, indent=2), file=out_buffer)
             else:
-                pprint.pprint(x, indent=2)
+                pprint.pprint(x, indent=2, stream=out_buffer)
         elif x:
-            print(x)
+            print(x, file=out_buffer)
 
 
 def _print_result(
     result: Result,
+    host: Optional[str] = None,
     attrs: List[str] = None,
     failed: bool = False,
     severity_level: int = logging.INFO,
-    print_host: bool = False,
-) -> None:
+    return_output: bool = False,
+) -> Union[None, str]:
+    global OUT_BUFFER
+    out_buffer = None
+    if return_output:
+        out_buffer = OUT_BUFFER
+    else:
+        out_buffer = sys.stdout
+
     attrs = attrs or ["diff", "result", "stdout"]
     if isinstance(attrs, str):
         attrs = [attrs]
 
     if isinstance(result, AggregatedResult):
         msg = result.name
-        print("{}{}{}{}".format(Style.BRIGHT, Fore.CYAN, msg, "*" * (80 - len(msg))))
+        print(
+            "{}{}{}{}".format(Style.BRIGHT, Fore.CYAN, msg, "*" * (80 - len(msg))),
+            file=out_buffer,
+        )
         for host, host_data in sorted(result.items()):
             title = (
                 ""
@@ -110,46 +116,70 @@ def _print_result(
             )
             msg = "* {}{}".format(host, title)
             print(
-                "{}{}{}{}".format(Style.BRIGHT, Fore.BLUE, msg, "*" * (80 - len(msg)))
+                "{}{}{}{}".format(Style.BRIGHT, Fore.BLUE, msg, "*" * (80 - len(msg))),
+                file=out_buffer,
             )
-            _print_result(host_data, attrs, failed, severity_level)
+            _print_result(
+                host_data,
+                host,
+                attrs,
+                failed,
+                severity_level,
+                return_output=return_output,
+            )
     elif isinstance(result, MultiResult):
         _print_individual_result(
             result[0],
+            host,
             attrs,
             failed,
             severity_level,
             task_group=True,
-            print_host=print_host,
+            return_output=return_output,
         )
         for r in result[1:]:
-            _print_result(r, attrs, failed, severity_level)
+            _print_result(
+                r, host, attrs, failed, severity_level, return_output=return_output
+            )
         color = _get_color(result[0], failed)
         msg = "^^^^ END {} ".format(result[0].name)
-        print("{}{}{}{}".format(Style.BRIGHT, color, msg, "^" * (80 - len(msg))))
+        print(
+            "{}{}{}{}".format(Style.BRIGHT, color, msg, "^" * (80 - len(msg))),
+            file=out_buffer,
+        )
     elif isinstance(result, Result):
         _print_individual_result(
-            result, attrs, failed, severity_level, print_host=print_host
+            result, host, attrs, failed, severity_level, return_output=return_output
         )
+    if return_output:
+        return out_buffer.getvalue()
 
 
 def print_result(
     result: Result,
+    host: Optional[str] = None,
     vars: List[str] = None,
     failed: bool = False,
     severity_level: int = logging.INFO,
-) -> None:
+    return_output: bool = False,
+) -> Union[None, str]:
     """
-    Prints an object of type `nornir.core.task.Result`
-
+    Prints the :obj:`nornir.core.task.Result` from a previous task to screen
     Arguments:
-      result: from a previous task
-      vars: Which attributes you want to print
-      failed: if ``True`` assume the task failed
-      severity_level: Print only errors with this severity level or higher
+        result: from a previous task
+        host: # TODO
+        vars: Which attributes you want to print
+        failed: if ``True`` assume the task failed
+        severity_level: Print only errors with this severity level or higher
+        return_output: If ``True``, return the formatted output instead of printing on stdout
     """
     LOCK.acquire()
+    global OUT_BUFFER
     try:
-        _print_result(result, vars, failed, severity_level, print_host=True)
+        string_output = _print_result(
+            result, host, vars, failed, severity_level, return_output=return_output
+        )
+        return string_output
     finally:
         LOCK.release()
+        OUT_BUFFER.close()

@@ -1,0 +1,27 @@
+! por si esta creada ya
+no track 200 ip sla 200
+no ip sla 200
+!
+ip sla 200
+ icmp-echo 172.29.2.1 source-interface Tunnel200
+ threshold 3000
+ timeout 3000
+ frequency 4
+ history distributions-of-statistics-kept 2
+ history enhanced interval 4 buckets 10
+ip sla schedule 200 life forever start-time now
+!
+track 200 ip sla 200 reachability
+ delay down 8
+!
+event manager applet INETtunnelDOWN
+ event track 200 state down
+ action 10.0 syslog msg "IPsec INET tunnel down for at least 8 sec: WARNING"
+ action 11.0 snmp-trap strdata "check INET line"
+ action 20.0 cli command "enable"
+ action 25.0 cli command "conf t"
+ action 30.0 cli command "interf tu200"
+ action 40.0 cli command "shut"
+ action 50.0 cli command "no shut"
+ action 99.0 syslog msg "INET tunnel reset completed"
+!

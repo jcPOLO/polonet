@@ -13,27 +13,27 @@ def test_ensure_device_instance_is_valid():
         "hostname": hostname,
         "platform": platform,
         "serial_number": serial_number,
-        "port": port
+        "port": port,
     }
 
     device = Device(**device_kwargs)
     assert device.platform == platform
     assert device.hostname == hostname
-    assert device.data['serial_number'] == serial_number
+    assert device.data["serial_number"] == serial_number
     assert device.port == int(port)
 
 
 def test_ensure_device_instance_has_valid_ip():
 
     device_kwargs = {
-        "hostname": '1.1.1.a',
-        "platform": 'ios',
-        "serial_number": '12345',
+        "hostname": "1.1.1.a",
+        "platform": "ios",
+        "serial_number": "12345",
     }
     with pytest.raises(ValidationException):
         Device(**device_kwargs)
 
-    device_kwargs["hostname"] = ''
+    device_kwargs["hostname"] = ""
     with pytest.raises(ValidationException):
         Device(**device_kwargs)
 
@@ -41,49 +41,49 @@ def test_ensure_device_instance_has_valid_ip():
     with pytest.raises(ValidationException):
         Device(**device_kwargs)
 
-    device_kwargs["hostname"] = '1.1.1.1'
+    device_kwargs["hostname"] = "1.1.1.1"
     device = Device(**device_kwargs)
-    assert device.hostname == '1.1.1.1'
+    assert device.hostname == "1.1.1.1"
 
 
 def test_ensure_device_instance_has_valid_platform():
 
     device_kwargs = {
-        "hostname": '1.1.1.1',
-        "platform": 'anchoas',
-        "serial_number": '12345',
+        "hostname": "1.1.1.1",
+        "platform": "anchoas",
+        "serial_number": "12345",
     }
 
     with pytest.raises(ValidationException):
         Device(**device_kwargs)
 
-    device_kwargs["platform"] = ''
+    device_kwargs["platform"] = ""
     with pytest.raises(ValidationException):
         Device(**device_kwargs)
 
-    device_kwargs["platform"] = 'ios'
+    device_kwargs["platform"] = "ios"
     device = Device(**device_kwargs)
-    assert device.platform == 'ios'
+    assert device.platform == "ios"
 
 
 def test_ensure_device_instance_has_valid_port():
 
     device_kwargs = {
-        "hostname": '1.1.1.1',
-        "platform": 'ios',
-        "serial_number": '12345',
-        "port": '70000'
+        "hostname": "1.1.1.1",
+        "platform": "ios",
+        "serial_number": "12345",
+        "port": "70000",
     }
 
     with pytest.raises(ValidationException):
         Device(**device_kwargs)
 
-    device_kwargs["port"] = 'abc'
+    device_kwargs["port"] = "abc"
 
     with pytest.raises(ValidationException):
         Device(**device_kwargs)
 
-    device_kwargs["port"] = '23'
+    device_kwargs["port"] = "23"
     device = Device(**device_kwargs)
     assert device.port == 23
 
@@ -91,21 +91,21 @@ def test_ensure_device_instance_has_valid_port():
 def test_ensure_device_instance_has_extra_data():
 
     device_kwargs = {
-        "hostname": '1.1.1.1',
-        "platform": 'ios',
-        "serial_number": '12345',
+        "hostname": "1.1.1.1",
+        "platform": "ios",
+        "serial_number": "12345",
     }
 
     device = Device(**device_kwargs)
-    assert device.data['serial_number'] == '12345'
+    assert device.data["serial_number"] == "12345"
 
 
 def test_get_devices():
     total = len(Device.get_devices())
     device_kwargs = {
-        "hostname": '1.1.1.1',
-        "platform": 'ios',
-        "serial_number": '12345',
+        "hostname": "1.1.1.1",
+        "platform": "ios",
+        "serial_number": "12345",
     }
     Device(**device_kwargs)
     assert len(Device.get_devices()) == total + 1
@@ -113,20 +113,20 @@ def test_get_devices():
 
 def test_get_devices_data_keys_and__dict__():
     device_kwargs = {
-        "hostname": '1.1.1.1',
-        "platform": 'ios',
-        "serial_number": '12345',
-        'site': 'zaragoza'
+        "hostname": "1.1.1.1",
+        "platform": "ios",
+        "serial_number": "12345",
+        "site": "zaragoza",
     }
     Device.devices = []
     device = Device(**device_kwargs)
     data_keys = Device.get_devices_data_keys()
-    assert ', '.join(data_keys) == 'serial_number, site'
+    assert ", ".join(data_keys) == "serial_number, site"
     assert dict(device) == {
-        "hostname": '1.1.1.1',
-        "platform": 'ios',
+        "hostname": "1.1.1.1",
+        "platform": "ios",
         "port": 22,
-        "serial_number": '12345',
-        'site': 'zaragoza',
-        "groups": ['ios']
+        "serial_number": "12345",
+        "site": "zaragoza",
+        "groups": ["ios"],
     }

@@ -1,92 +1,152 @@
 from crypt import methods
+from datetime import datetime
 import json
-import os
 import logging
 from typing import Dict, List
-from flask import Blueprint, render_template, request, flash, redirect, session, url_for, jsonify, current_app
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    flash,
+    redirect,
+    session,
+    url_for,
+    jsonify,
+    current_app,
+)
 from flask_login import login_required, current_user
 from app import db
 from app.inventory.schemas import InventorySchema, DeviceSchema
 from app.inventory.models import Device, Inventory
+from app.job.models import Job
+from app.job.schemas import JobSchema
 from app.core.helpers import dir_path, json_to_csv
 from app.core.core import Core
+from nornir_utils.plugins.functions import print_result
 
 
-job_bp = Blueprint('job_bp', __name__, template_folder='templates')
+job_bp = Blueprint("job_bp", __name__, template_folder="templates")
 logger = logging.getLogger(__name__)
 
-ALLOWED_EXTENSIONS = {'txt', 'csv'}
+ALLOWED_EXTENSIONS = {"txt", "csv"}
 DEFAULT_DEVICE_ATTR = [
-    'hostname','platform','port','custom','user_id','id',
-    'date_created','date_modified'
+    "hostname",
+    "platform",
+    "port",
+    "custom",
+    "user_id",
+    "id",
+    "date_created",
+    "date_modified",
 ]
-OMITTED_DEVICE_ATTR = ['groups','user_id','_sa_instance_state']
-CFG_FILE = f'{dir_path}/config.yaml'
+OMITTED_DEVICE_ATTR = ["groups", "user_id", "_sa_instance_state"]
+CFG_FILE = f"{dir_path}/config.yaml"
 
 
-@job_bp.route('/job', methods=['GET','POST'])
+@job_bp.route("/job", methods=["GET", "POST"])
 @login_required
 def tasks():
     tasks = [
-        {'name': 'get_version','description': 'hacer un show version'},
-        {'name': 'save_config','description': 'guardar la configuracion'},
-        {'name': 'set_ip_domain.j2','description': 'poner el ip domain <prueba.com>'}
+        {"name": "get_version", "description": "hacer un show version"},
+        {"name": "save_config", "description": "guardar la configuracion"},
+        {"name": "set_ip_domain.j2", "description": "poner el ip domain <prueba.com>"},
     ]
-    devices = session.get('devices') or []
-    if request.method == 'POST':
+    devices = session.get("devices") or []
+    if request.method == "POST":
         devices = json.loads(request.data)
-        session['devices'] = devices
+        session["devices"] = devices
         return jsonify(devices), 200
-    return render_template("job/tasks.html",
-                            tasks=tasks,
-                            devices=devices,
-                            user=current_user,
+    return render_template(
+        "job/tasks.html",
+        tasks=tasks,
+        devices=devices,
+        user=current_user,
     )
 
+
 # TODO: temporary web result  '/job/<id>/result'
-@job_bp.route('/job/result', methods=['GET','POST'])
+@job_bp.route("/job/result", methods=["GET", "POST"])
 @login_required
 def jobs():
+    job_schema = JobSchema()
     # GET
-    results = session.get('results')
+    results = session.get("results")
+    if request.method == "GET":
+        pass
 
-    if request.method == 'POST':
-        devices = session['devices']
-        tasks = request.form.getlist('data')
+    if request.method == "POST":
+        devices = session["devices"]
+        tasks = request.form.getlist("data")
         devices = json_to_csv(list(devices))
-        print(devices)
 
-        print('tasks: ', tasks)
-        print('devices: ', devices)
-
-        core = Core(csv_text=devices, tasks=tasks, cli=False, username='cisco', password='cisco')
-        results = core.run()
-        output = []
-        for device in results:
-            num_tasks = len(results[device])
-            for i in range(num_tasks - 1):
-                node = dict(
-                    host = str(results[device][i].host),
-                    name_task = str(results[device][i].name),
-                    result_task = results[device][i].result,
-                    has_failed = str(results[device][i].failed),
-                    has_changed = str(results[device][i].changed),
-                    diff = str(results[device][i].diff),
-                    stderr = str(results[device][i].stderr),
-                    exception = str(results[device][i].exception),
-                )
-                output.append(node)
-        objects = ", ".join(
-            [
-                f'{{host: "{host}", success: {not v.failed}, task: "asdf"}}'
-                for host, v in results.items()
-            ]
+        # TODO: I have to do a way to chose credentials to pass them
+        core = Core(
+            csv_text=devices, tasks=tasks, cli=False, username="cisco", password="cisco"
         )
-        print(objects)
+        data = dict(
+            inventory_id=session["inventory_id"],
+            output="",
+            status=1,
+        )
+        job = job_schema.load(data)
+        results = core.run()
+        job.finished_at = datetime.now()
+        db.session.commit()
+        result = job_schema.dump(job)
 
-        redirect(url_for('inventory_bp.inventories'))
-        return jsonify(output)
-    return render_template("job/result.html",
-                            user=current_user,
-                            jobs=jobs,
-                            )
+        result_tasks = {k: [] for k in tasks if ".j2" not in k}
+
+        # TODO: remove this. Just prints what nornir would print in CLI.
+        from app.job.helper import print_result
+
+        # TODO: implement a way to toggle between ansible like result or nornir like result
+        output = print_result(results, return_output=True)
+        if isinstance(output, str):
+            output = output.split("\n")
+
+        status = results.failed  # True if at least 1 task failed
+
+        # Ansible like result
+        # TODO: Exceptions are not serializable. Do a better thing in all of this.
+        # TODO: Diff for jinja2 templates is not implemented (only napalm config have it)
+        for host, tasks_result in sorted(results.items()):
+            for task in tasks_result:
+                task_name = str(task.name).split(" ")[0].lower()
+                if (
+                    task_name in tasks
+                    or task_name == "get_config"
+                    or "plantilla" in task_name
+                ):
+                    if isinstance(task.result, str):
+                        task.result = task.result.split("\n")
+                    taskres = {
+                        "result": task.result,
+                        "failed": task.failed,
+                        "ip": str(host),
+                        "changed": task.changed,
+                        "diff": task.diff,
+                        "stderr": task.stderr,
+                        # 'exception': task.exception
+                    }
+                    result_tasks[task_name] = result_tasks.get(task_name, [])
+                    result_tasks[task_name].append(taskres)
+
+        # TODO: remove this. It is just to simulate what is going to be seen in results.html
+        for task, hosts in result_tasks.items():
+            print(f"{task} ************")
+            for host in hosts:
+                if host["failed"]:
+                    print(f"{host['ip']} : FAIL")
+                    # print(f"EXCEPTION: {host['exception']}")
+                else:
+                    print(f"{host['ip']} : OK")
+
+        return render_template(
+            "job/result.html",
+            user=current_user,
+            status=status,
+            session=session,
+            result=result,
+            tasks=result_tasks,
+            output=output,
+        )

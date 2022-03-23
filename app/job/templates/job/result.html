@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}
+Jobs
+{% endblock %}
+{% block content %}
+<section class="section">
+    <h1>JOBS</h1>
+</section>
+<section class="row">
+    <div class="col p-3 border bg-light">
+        <h3>RESULTS</h3>
+        <div class="row">
+            <div class="col">
+                <p class="">STATUS</p>
+                <p class="">NAME</p>
+                <p class="">STARTED</p>
+                <p class="">FINISHED</p>
+                <p class="">ELAPSED</p>
+                <p class="">INVENTORY</p>
+                <p class="">LAUNCHED BY</p>
+            </div>
+            <div class="col">
+                <p class="">{{ "failed" if status else "success"}}</p>
+                <p class="">{{ "texto" }}</p>
+                <p class="">{{ result.started_at }}</p>
+                <p class="">{{ result.finished_at }}</p>
+                <p class="">{{ "texto" }}</p>
+                <p class="">{{ session.inventory_name }}</p>
+                <p class="">{{ result.user }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col p-3 border bg-light">
+        <h3>OUTPUT</h3>
+        <div class="row">
+            <div class="col">
+            {% for task, hosts in tasks.items() %}
+                <p class="">TASK [{{ task }}] ****************</p>
+                {% for host in hosts %}
+                <div class="toggler">{{ host.ip }} : <span>{{ "FAILED" if host.failed else "OK"}}</span></div>
+                <ul class="collapse">
+                    <li class="toggler">Result:</li>
+                        <div class="collapse">
+                            {% for line in host.result %}
+                            <p>{{ line }}</p>
+                            {% endfor %}
+                        </div>
+                    {% if host.diff %}
+                    <li class="toggler">Diff:</li>
+                        <p class="collapse">{{ host.diff }}</p>
+                    {% endif %}
+                    <li class="toggler">Changed:</li>
+                        <p class="collapse">{{ host.changed }}</p>
+                    {% if host.stderr %}
+                    <li class="toggler">Errors:</li>
+                        <p class="collapse">{{ host.stderr }}</p>
+                    {% endif %}
+                </ul>
+                {% endfor %}
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        {% for line in output %}
+            <p>{{ line }}</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

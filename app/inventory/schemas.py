@@ -2,10 +2,18 @@ import csv
 import io
 import json
 from typing import Dict, List
-from marshmallow import ValidationError, post_dump, post_load, pre_dump, pre_load, validates, INCLUDE
+from marshmallow import (
+    ValidationError,
+    post_dump,
+    post_load,
+    pre_dump,
+    pre_load,
+    validates,
+    INCLUDE,
+)
 from app import ma
 from app.core.models.device import Device as NornirDevice
-from app.core.models.bootstrap import Bootstrap 
+from app.core.models.bootstrap import Bootstrap
 from app.core.exceptions import ValidationException
 from app.inventory.models import Inventory, Device
 from app.core.helpers import json_to_csv
@@ -15,11 +23,14 @@ from slugify import slugify
 
 
 DEFAULT_DEVICE_ATTR = [
-    'hostname','platform','port','custom','user_id','id',   
+    "hostname",
+    "platform",
+    "port",
+    "custom",
+    "user_id",
+    "id",
 ]
-OMITTED_DEVICE_ATTR = [
-    'groups','_sa_instance_state','date_created','date_modified'
-]
+OMITTED_DEVICE_ATTR = ["groups", "_sa_instance_state", "date_created", "date_modified"]
 
 
 class DeviceSchema(ma.SQLAlchemyAutoSchema):
@@ -27,7 +38,15 @@ class DeviceSchema(ma.SQLAlchemyAutoSchema):
         model = Device
         include_relationships = True
         include_fk = True
-        fields = ("hostname", "platform", "port", "custom", "date_modified", "date_created", "id")
+        fields = (
+            "hostname",
+            "platform",
+            "port",
+            "custom",
+            "date_modified",
+            "date_created",
+            "id",
+        )
 
     id = ma.auto_field()
     hostname = ma.auto_field()
@@ -35,21 +54,20 @@ class DeviceSchema(ma.SQLAlchemyAutoSchema):
     port = ma.auto_field()
     custom = ma.auto_field()
 
-
     # I think is only matched when port is introduced as string
     def handle_error(self, exc, data, **kwargs):
         """Log and raise our custom exception when (de)serialization fails."""
         errors = []
         exc = exc.messages
-        for k,msg in exc.items():
-            message = "{} is not valid. {}".format(k, ' '.join(msg))
+        for k, msg in exc.items():
+            message = "{} is not valid. {}".format(k, " ".join(msg))
             errors.append(message)
-        message = ' '.join(errors)
-        raise ValidationException('fail-config', message)
+        message = " ".join(errors)
+        raise ValidationException("fail-config", message)
 
     @pre_dump
     def device_dump(self, data, **kwargs):
-        a = data 
+        a = data
         return a
 
     @post_dump
@@ -59,8 +77,8 @@ class DeviceSchema(ma.SQLAlchemyAutoSchema):
                 # remove empty attributes
                 if v:
                     # custom keys inside data are shown, data key is not shown.
-                    if k == 'custom':
-                        if device[k] != 'None':
+                    if k == "custom":
+                        if device[k] != "None":
                             for a, b in device[k].items():
                                 yield a, b
                         else:
@@ -70,39 +88,43 @@ class DeviceSchema(ma.SQLAlchemyAutoSchema):
                         pass
                     else:
                         yield k, v
+
         device = data.copy()
-        if device['custom'] != 'None':
-            device['custom'] = json.loads(device['custom'])
+        if device["custom"] != "None":
+            device["custom"] = json.loads(device["custom"])
             print(device)
-        data = {k:v for k,v in generator(device)}
+        data = {k: v for k, v in generator(device)}
         return data
 
     @pre_load
     def device_db(self, data, **kwargs):
-        custom = {k:v for k,v in data.items() if k not in DEFAULT_DEVICE_ATTR and k not in OMITTED_DEVICE_ATTR}
-        device = {k:v for k,v in data.items() if k in DEFAULT_DEVICE_ATTR }
-        device['custom'] = json.dumps(custom)
+        custom = {
+            k: v
+            for k, v in data.items()
+            if k not in DEFAULT_DEVICE_ATTR and k not in OMITTED_DEVICE_ATTR
+        }
+        device = {k: v for k, v in data.items() if k in DEFAULT_DEVICE_ATTR}
+        device["custom"] = json.dumps(custom)
         return device
 
-    @validates('hostname')
-    def validate_hostname(self,a):
+    @validates("hostname")
+    def validate_hostname(self, a):
         return NornirDevice.validate_hostname(a)
-    
-    @validates('port')
-    def validate_port(self,a):
+
+    @validates("port")
+    def validate_port(self, a):
         return NornirDevice.validate_port(a)
 
-
-    @validates('platform')
-    def validate_platform(self,a):
+    @validates("platform")
+    def validate_platform(self, a):
         return NornirDevice.validate_platform(a)
 
     @post_load
     def create_devices(self, data, **kwargs):
-        if data.get('id'):
+        if data.get("id"):
             return data
         try:
-            d,_ = Device.get_or_create(db.session, user_id=current_user.id, **data)
+            d, _ = Device.get_or_create(db.session, user_id=current_user.id, **data)
         except Exception as e:
             raise ValidationException("fail-config", e.error)
         return d
@@ -121,57 +143,63 @@ class InventorySchema(ma.SQLAlchemyAutoSchema):
     user_id = ma.auto_field()
     devices = ma.auto_field()
 
-
-    @pre_load 
+    @pre_load
     def inventory_db(self, data, **kwargs):
         # si viene en json-like-dict y no en csv directamente
         # if isinstance(data, dict):
         #     data['data'] = json_to_csv(list(data))
-        data['devices'] = Bootstrap.validate_csv_inventory(data['data'].lower())
-        csv = json_to_csv(data['devices'])
-        data['data'] = csv
+        data["devices"] = Bootstrap.validate_csv_inventory(data["data"].lower())
+        csv = json_to_csv(data["devices"])
+        data["data"] = csv
         return data
-    
-    @validates('name')
+
+    @validates("name")
     def validate_name(self, a):
         if not a:
-            message = 'Inventory does not have name'
-            raise ValidationException('fail-config', message)
-        exists = Inventory.query.filter_by(slug=slugify(a), user_id=current_user.id).first()
-        if a in '< > | { / } \ , .'.split() :
-                message = "name '{}' is not a valid. ".format(a)
-                raise ValidationException("fail-config", message)
+            message = "Inventory does not have name"
+            raise ValidationException("fail-config", message)
+        exists = Inventory.query.filter_by(
+            slug=slugify(a), user_id=current_user.id
+        ).first()
+        if a in "< > | { / } , .".split():
+            message = "name '{}' is not a valid. ".format(a)
+            raise ValidationException("fail-config", message)
         if exists:
-            message = "Inventory named '{}' already exists! Use a different name.".format(a)
-            raise ValidationException('fail-config', message)
+            message = (
+                "Inventory named '{}' already exists! Use a different name.".format(a)
+            )
+            raise ValidationException("fail-config", message)
         else:
             return a
 
-
-    @validates('data')
+    @validates("data")
     def validate_data(self, a):
         if not a:
-            message = 'Inventory is empty.'
-            raise ValidationException('fail-config', message)
+            message = "Inventory is empty."
+            raise ValidationException("fail-config", message)
         exists = Inventory.query.filter_by(data=a, user_id=current_user.id).first()
         if exists:
-            message = "Inventory named '{}' has the same data. Invetory not created!".format(exists.name)
-            raise ValidationException('fail-config', message)
+            message = (
+                "Inventory named '{}' has the same data. Invetory not created!".format(
+                    exists.name
+                )
+            )
+            raise ValidationException("fail-config", message)
         else:
             return a
 
     @post_load
     def create_inventory(self, data, **kwargs):
         device_schema = DeviceSchema()
-        data['slug'] = slugify(data['name'])
-        devices = data.pop('devices')
-        new_inventory,_ = Inventory.get_or_create(db.session, **data)
+        data["slug"] = slugify(data["name"])
+        devices = data.pop("devices")
+        new_inventory, _ = Inventory.get_or_create(db.session, **data)
         for device in devices:
             try:
                 device = device_schema.load(device)
             except Exception as e:
                 raise ValidationException("fail-config", e.error)
-            new_inventory.devices.append(device) 
+            new_inventory.devices.append(device)
         db.session.add(new_inventory)
         db.session.commit()
         return new_inventory

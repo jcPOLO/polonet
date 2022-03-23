@@ -81,3 +81,11 @@ textarea.form-control {
 #file {
     max-width: 30rem;
 }
+
+.toggler {
+    cursor: pointer;
+}
+
+ul {
+    list-style-type: none;
+}

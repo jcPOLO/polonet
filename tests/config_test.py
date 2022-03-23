@@ -1,3 +1,5 @@
+import os
+
 # Say it is TEST environment
 TESTING = True
 
@@ -5,8 +7,7 @@ TESTING = True
 DEBUG = True
 
 # Define the application directory (like doing a pwd)
-import os
-BASE_DIR = os.path.abspath(os.path.dirname('config.py'))
+BASE_DIR = os.path.abspath(os.path.dirname("config.py"))
 
 # Define the database - we are working with
 # SQLite for this example
@@ -28,21 +29,21 @@ THREADS_PER_PAGE = 2
 
 # Enable protection agains *Cross-site Request Forgery (CSRF)*
 # Disabled for testing
-CSRF_ENABLED     = False
+CSRF_ENABLED = False
 
 # Use a secure, unique and absolutely secret key for
-# signing the data. 
+# signing the data.
 CSRF_SESSION_KEY = "secret"
 
 # Secret key for signing cookies
 SECRET_KEY = "secret"
 
 # Upload csv folder
-UPLOAD_FOLDER = f'{BASE_DIR}/app/static/uploads/'
+UPLOAD_FOLDER = f"{BASE_DIR}/app/static/uploads/"
 
 # Inventory file name
-INVENTORY_FILE = 'inventory.csv'
+INVENTORY_FILE = "inventory.csv"
 
-# It will instruct Flask to print out the steps it goes through to 
+# It will instruct Flask to print out the steps it goes through to
 # locate templates on every render_template call.
 # EXPLAIN_TEMPLATE_LOADING = True

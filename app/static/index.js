@@ -1,9 +1,10 @@
+// TODO: Work in dark/light mode
 // Toggle dark/light theme
-const btn = document.querySelector('.btn-toggle');
-btn.addEventListener('click', function() {
-  document.body.classList.toggle('dark-theme');  
-  btn.innerHTML = document.body.classList.contains('dark-theme') ? 'Light' : 'Dark';
-});
+// const btn = document.querySelector('.btn-toggle');
+// btn.addEventListener('click', function() {
+//   document.body.classList.toggle('dark-theme');  
+//   btn.innerHTML = document.body.classList.contains('dark-theme') ? 'Light' : 'Dark';
+// });
 
 // InventoryTable class. 
 // It does all ralated tasks for ag-grid table framekwork and it has all its config.
@@ -183,3 +184,12 @@ if (document.readyState === "loading") {
         inventoryTable.createInventoryTable();
     }
 }
+
+// Toggle result host information
+const togglers = document.querySelectorAll(".toggler");
+togglers.forEach(toggler => {
+    toggler.addEventListener('click', () => {
+        toggler.classList.toggle('show');
+        toggler.nextElementSibling.classList.toggle('show');
+    });
+})
