@@ -31,6 +31,21 @@ cd polonet
 poetry install
 poetry shell
 ```
+
+## CSV format
+```
+hostname,platform,port,site,whatever
+1.1.1.1,ios,22,Zaragoza,Anchoas
+2.2.2.2,fortinet,22,Huesca,Boquerones
+3.3.3.3,huawei,22,Teruel,Sardinas
+4.4.4.4,ios_telnet,23,Pamplona,Chorizo
+```
+Only hostname column is mandatory.  
+
+Default values:  
+- platform = ios
+- port = 22
+
 ## CLI version
 ```
 python app.py <inventory csv file>
