@@ -3,7 +3,7 @@ from app.core.helpers import is_ip
 
 
 # supported platforms at the moment
-PLATFORMS = ["ios", "nxos"]
+PLATFORMS = ["ios", "nxos", "fortinet", "huawei"]
 
 
 class Device(object):
