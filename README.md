@@ -15,7 +15,7 @@ In Terminal:
 sudo add-apt-repository ppa:git-core/ppa
 sudo apt update
 sudo apt install git
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+curl -sSL https://install.python-poetry.org | python3 -
 git clone https://github.com/jcPOLO/polonet.git
 cd polonet
 poetry install
@@ -23,7 +23,7 @@ poetry shell
 ```
 
 ### Windows 10
-Prerequisites done.  
+Prerequisites done.
 In powershell or cmd:
 ```
 git clone https://github.com/jcPOLO/polonet.git
@@ -40,9 +40,9 @@ hostname,platform,port,site,whatever
 3.3.3.3,huawei,22,Teruel,Sardinas
 4.4.4.4,ios_telnet,23,Pamplona,Chorizo
 ```
-Only hostname column is mandatory.  
+Only hostname column is mandatory.
 
-Default values:  
+Default values:
 - platform = ios
 - port = 22
 
