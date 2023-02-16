@@ -1,3 +1,26 @@
-from alpine:latests 
+from python:3.9 as requirements-stage
 
-RUN apk add --no-cache python3-dev pip3 install --upgrade pip
+WORKDIR /tmp
+
+RUN pip install poetry
+
+COPY ./pyproject.toml ./poetry.lock* /tmp/
+
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+FROM python:3.9
+
+WORKDIR /code
+
+COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+COPY . /code/.
+
+CMD ["flask", "db", "init"]
+CMD ["flask", "db", "migrate", "-m", "Initial migration."]
+CMD ["flask", "db", "upgrade"]
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0"]
+#CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+

@@ -32,6 +32,13 @@ poetry install
 poetry shell
 ```
 
+### Docker
+```
+git clone https://github.com/jcPOLO/polonet.git
+cd polonet
+docker build -t polonet .
+docker run -d --name polonet -p 5000:5000 polonet
+
 ## CSV format
 ```
 hostname,platform,port,site,whatever
