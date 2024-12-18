@@ -8,6 +8,11 @@ ios:
     netmiko:
       extras:
         fast_cli: False
+    napalm:
+      extras:
+        optional_args:
+          # transport: 'telnet'
+          secret: 'cisco'
 
 nxos:
   connection_options:

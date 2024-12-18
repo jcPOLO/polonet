@@ -1,0 +1,16 @@
+!
+logging 10.169.25.15
+!
+logging userinfo
+logging persistent url flash:/syslog size 16384
+logging persistent immediate
+logging console warnings
+archive
+log config
+logging enable
+logging persistent auto
+logging size 500
+hidekeys
+login delay 2
+login block-for 120 attempts 5 within 60
+!

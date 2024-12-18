@@ -7,6 +7,7 @@ from app.core.models.menu import Menu
 from app.core.models.bootstrap import Bootstrap
 from app.core.models.filter import Filter
 from app.core.helpers import configure_logging, dir_path
+from app.core.output import facts_for_customer_csv
 import getpass
 from typing import List, Dict
 import logging
@@ -91,7 +92,7 @@ class Core(object):
             print_result(result)
 
         # ---------------------------------------------------
-        # app.core.output.facts_for_customer_csv(result)
+        facts_for_customer_csv(result)
         # ---------------------------------------------------
 
         # Start the stopwatch / counter
@@ -113,6 +114,7 @@ class Core(object):
                 "Elapsed time during the whole program in seconds:",
                 "{0:.2f}".format(elapsed_time),
             )
+            print(result.failed_hosts)
 
         return result
 

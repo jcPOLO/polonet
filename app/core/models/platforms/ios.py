@@ -1,3 +1,4 @@
+from re import L
 from nornir_netmiko.tasks import (
     netmiko_send_command,
     netmiko_save_config,
@@ -206,3 +207,13 @@ class Ios(PlatformBase):
                     Free space: {HumanBytes.format(space_available)}\n \
                     Total size: {HumanBytes.format(total_size)}"
             raise RuntimeErrorException("fail-config", message)
+
+    def get_users(self):
+        r = self.task.run(
+            task=netmiko_send_command,
+            name=GET_DIR_MSG.format(self.task.host, self.task.host.hostname),
+            command_string="show log",
+            use_textfsm=False,
+            severity_level=logging.INFO,
+        ).result
+        return r
