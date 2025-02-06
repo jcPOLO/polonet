@@ -164,3 +164,6 @@ def csv_to_json(csv_text):
     reader = csv.DictReader(io.StringIO(csv_text))
     json_data = json.dumps(list(reader))
     return json_data
+
+def prompt_user(message: str) -> bool:
+    return input(message).lower() == 'y'

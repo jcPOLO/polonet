@@ -20,6 +20,9 @@ GET_CONFIG_MSG = "GET_CONFIG - SHOW RUN PARA EL HOST: {} {}"
 GET_INTERFACE_STATUS_MSG = "SHOW INTERFACE STATUS PARA EL HOST: {}"
 GET_INTERFACES_TRUNK_MSG = "SHOW INTERFACE TRUNK PARA EL HOST: {}"
 GET_DIR_MSG = "GET_DIR - DIR FLASH:/ PARA EL HOST: {}"
+GET_USERS_MSG = "GET_USERS - SHOW RUN | I USERNAME PARA EL HOST: {}"
+GET_RADIUS_SERVERS_MSG = "GET_RADIUS_SERVERS - SHOW AAA SERVERS PARA EL HOST: {}"
+GET_SSH_VERSION_MSG = "GET_SSH_VERSION - SHOW SSH PARA EL HOST: {}"
 SAVE_CONFIG_MSG = "SAVE_CONFIG - WRITE MEM PARA EL HOST: {}"
 
 GET_VERSION_CMD = "show version"
@@ -29,10 +32,12 @@ GET_INTERFACES_TRUNK_CMD = "show interfaces trunk"
 GET_INTERFACES_DESCRIPTION_CMD = "show interface {}"
 GET_NEIGHBORS_CMD = "show cdp nei {} det"
 GET_DIR_CMD = "dir"
+GET_RADIUS_SERVERS_CMD = "show aaa servers"
+GET_SSH_VERSION_CMD = "show ip ssh"
 
 
 class Ios(PlatformBase):
-    def __init__(self, task: Task):
+    def __init__(self, task: Task, **kwargs):
         super().__init__(task)
 
     # TODO: napalm version to base?
@@ -100,15 +105,6 @@ class Ios(PlatformBase):
             task=netmiko_save_config,
             name=SAVE_CONFIG_MSG.format(self.task.host),
             # severity_level=logging.DEBUG
-        ).result
-        return r
-
-    def get_config_section(self) -> str:
-        r = self.task.run(
-            task=netmiko_send_command,
-            name=GET_CONFIG_MSG.format(self.task.host, self.task.host.hostname),
-            command_string=f"{GET_CONFIG_CMD} | i 213.229.183",
-            # severity_level=logging.DEBUG,
         ).result
         return r
 
@@ -182,7 +178,7 @@ class Ios(PlatformBase):
             name=GET_DIR_MSG.format(self.task.host, self.task.host.hostname),
             command_string=GET_DIR_CMD,
             use_textfsm=True,
-            severity_level=logging.DEBUG,
+            # severity_level=logging.DEBUG,
         ).result
         return r
 
@@ -211,9 +207,47 @@ class Ios(PlatformBase):
     def get_users(self):
         r = self.task.run(
             task=netmiko_send_command,
-            name=GET_DIR_MSG.format(self.task.host, self.task.host.hostname),
-            command_string="show log",
+            name=GET_USERS_MSG.format(self.task.host, self.task.host.hostname),
+            command_string="show run | i username",
             use_textfsm=False,
+            # severity_level=logging.INFO,
+        ).result
+        return r
+    
+    def get_radius_servers(self):
+        r = self.task.run(
+            task=netmiko_send_command,
+            name=GET_RADIUS_SERVERS_MSG.format(self.task.host, self.task.host.hostname),
+            command_string=GET_RADIUS_SERVERS_CMD,
+            use_textfsm=False,
+            # severity_level=logging.INFO,
+        ).result
+        return r
+    
+    def get_ssh_version(self):
+        r = self.task.run(
+            task=netmiko_send_command,
+            name=GET_SSH_VERSION_MSG.format(self.task.host, self.task.host.hostname),
+            command_string=GET_SSH_VERSION_CMD,
+            use_textfsm=True,
             severity_level=logging.INFO,
         ).result
         return r
+
+    def get_ntp_status(self):
+        r = self.task.run(
+            task=netmiko_send_command,
+            name="GET_NTP_STATUS",
+            command_string="show ntp status",
+            use_textfsm=True,
+            severity_level=logging.INFO,
+        ).result
+        return r
+    
+    def get_baselines(self):
+        self.get_config()
+        self.get_radius_servers()
+        self.get_users()
+        self.get_facts()
+        self.get_ssh_version()
+        self.get_ntp_status()

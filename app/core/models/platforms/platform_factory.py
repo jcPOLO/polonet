@@ -10,9 +10,9 @@ FORTINET = "fortinet"
 
 class PlatformFactory:
     @staticmethod
-    def get_platform(task: Task):
+    def get_platform(task: Task, **kwargs):
         if task.host.platform == IOS:
-            return Ios(task)
+            return Ios(task, **kwargs)
         if task.host.platform == HUAWEI:
             return Huawei(task)
         if task.host.platform == FORTINET:

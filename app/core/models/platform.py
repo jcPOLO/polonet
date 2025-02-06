@@ -5,63 +5,26 @@ import logging
 
 
 class PlatformBase:
-    def __init__(self, task: Task):
+    def __init__(self, task: Task, **kwargs):
         self.task = task
+        self.data = kwargs or {}
 
     def get_facts(self) -> str:
         r = self.task.run(
             task=napalm_get,
             name=f"FACTs PARA: {self.task.host}",
             getters=["facts"],
-            # severity_level=logging.DEBUG,
+            severity_level=logging.DEBUG,
         ).result
         return r
-    
-    # def get_facts(self) -> str:
-        
-    #     try:
-    #         print("anchoas0")
-    #         r = self.task.run(
-    #             task=napalm_get,
-    #             name=f"FACTs PARA: {self.task.host}",
-    #             getters=["facts"],
-    #             # severity_level=logging.DEBUG,
-    #         ).result
-    #         print("anchoas")
-    #     except ValueError as e:
-    #         print("anchoas2")
-    #         # Capturar el error de "Failed to enter enable mode"
-    #         if "Failed to enter enable mode" in str(e):
-    #             print(f"Error en {self.task.host}: No se pudo entrar al modo enable.")
-    #             print("Intentando con secret...")
-    #             # Intenta aplicar configuración dinámica con 'secret'
-    #             self.task.host.connection_options["napalm"].extras["secret"] = "cisco"
-    #             try:
-    #                 # Reintentar el comando con el secreto aplicado
-    #                 print("anchoas3")
-    #                 r = self.task.run(
-    #                     task=napalm_get,
-    #                     name=f"FACTs PARA: {self.task.host}",
-    #                     getters=["facts"],
-    #                     # severity_level=logging.DEBUG,
-    #                 ).result
-    #                 print(f"Conexión corregida para {self.task.host}")
-    #             except Exception as inner_e:
-    #                 print(f"Falló nuevamente en {self.task.host}: {inner_e}")
-    #                 print("anchoas4")
-    #         else:
-    #             raise  # Rethrow la excepción si no es lo que esperas
-    #             print(f"Error de autenticación en {self.task.host}: {e}")
-    #     except Exception as e:
-    #         print(f"Error inesperado en {self.task.host}: {e}")
 
     # TODO: Think about this cause this is not multiplatform
-    def send_command(self, command: str) -> str:
+    def send_command(self, **kwargs) -> str:
         r = self.task.run(
             task=netmiko_send_command,
             name="SEND COMMAND - Send the command to all devices",
-            # severity_level=logging.DEBUG
-            command_string=command,
+            # severity_level=logging.DEBUG,
+            command_string=kwargs['command'],
             use_textfsm=True,
         ).result
         return r
@@ -70,9 +33,6 @@ class PlatformBase:
         pass
 
     def get_config(self):
-        pass
-
-    def get_config_section(self):
         pass
 
     def get_interfaces_status(self):
@@ -100,4 +60,9 @@ class PlatformBase:
         pass
 
     def get_users(self):
+        pass
+    
+    def get_radius_servers(self):
+        pass
+    def get_baselines(self):
         pass

@@ -22,7 +22,6 @@ def backup_config(task: Task, path: str = "backups/") -> None:
         with open(filename, "w") as f:
             f.write(r)
 
-
 def basic_configuration(
     task: Task, template: str, ini_vars: configparser = None
 ) -> None:
@@ -53,7 +52,6 @@ def basic_configuration(
         # severity_level=logging.DEBUG,
     )
 
-
-def get_factory(task: Task, method: str) -> Callable:
-    device = PlatformFactory().get_platform(task)
-    return getattr(device, method)()
+def get_factory(task: Task, method: str, **kwargs) -> Callable:
+    device = PlatformFactory().get_platform(task, **kwargs)
+    return getattr(device, method)(**kwargs)
