@@ -7,7 +7,7 @@ from app.core.models.menu import Menu
 from app.core.models.bootstrap import Bootstrap
 from app.core.models.filter import Filter
 from app.core.helpers import configure_logging, dir_path, prompt_user
-from app.core.output import facts_for_customer_csv
+from app.core.output import security_baselines_output
 import getpass
 from typing import List, Dict
 import logging
@@ -145,7 +145,7 @@ class Core(object):
             ) -> None:
         
         print_result(result)
-        facts_for_customer_csv(result)
+        security_baselines_output(result)
 
         while result.failed_hosts:
             self.log_failed_hosts(result)
