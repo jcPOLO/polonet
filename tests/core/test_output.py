@@ -1,5 +1,6 @@
 import pytest
-from app.core.output import check_telnet_vty, check_password_encryption
+from app.core.output import check_telnet_vty, \
+    check_password_encryption, check_password_secret
 from app.core.output import evaluate_check, PASS, FAIL, WARNING
 from app.core.output import parse_user_info
 
@@ -189,3 +190,34 @@ def test_telnet_vty_enabled():
     """
     assert check_telnet_vty(output) == False
 
+def test_check_password_secret_enabled():
+    config = """
+    enable secret 5 $1$abc123
+    """
+    assert check_password_secret(config) == True
+
+def test_check_password_secret_disabled():
+    config = """
+    !
+    """
+    assert check_password_secret(config) == False
+
+def test_check_password_secret_partial():
+    config = """
+    enable password 7 0822455D0A16
+    """
+    assert check_password_secret(config) == False
+
+def test_check_password_secret_multiple_lines():
+    config = """
+    enable secret 5 $1$td/0$kwSJan8PZEIkSOo9q/
+    enable secret 5 $1$abc123
+    """
+    assert check_password_secret(config) == True
+
+def test_check_password_secret_no_secret():
+    config = """
+    enable password 7 0822455D0A16
+    enable password 7 0822455D0A17
+    """
+    assert check_password_secret(config) == False

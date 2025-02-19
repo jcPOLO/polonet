@@ -41,13 +41,13 @@ def apply_conditional_formatting(sheet, row_num, columns):
         
         sheet.conditional_formatting.add(
             cell_range, FormulaRule(
-                formula=[f'EXACT({col_letter}2,{PASS})'], fill=green_fill))
+                formula=[f'EXACT({col_letter}2,"{PASS}")'], fill=green_fill))
         sheet.conditional_formatting.add(
             cell_range, FormulaRule(
-                formula=[f'EXACT({col_letter}2,{FAIL})'], fill=red_fill))
+                formula=[f'EXACT({col_letter}2,"{FAIL}")'], fill=red_fill))
         sheet.conditional_formatting.add(
             cell_range, FormulaRule(
-                formula=[f'EXACT({col_letter}2,{WARNING})'], fill=yellow_fill))
+                formula=[f'EXACT({col_letter}2,"{WARNING}")'], fill=yellow_fill))
     
     # Obtener los índices de las columnas específicas
     stp_mode_column = columns.index('STP mode') + 1
@@ -81,11 +81,9 @@ def apply_conditional_formatting(sheet, row_num, columns):
         sheet.conditional_formatting.add(
             cell_range, FormulaRule(
                 formula=[f'EXACT({col_letter}2,"{stp_mode}")'], fill=green_fill))
-        
-    stp_conditions = " AND ".join([f'{col_letter}2<>"{mode}"' for mode in VALID_STP_MODES])
-    sheet.conditional_formatting.add(
-        cell_range, FormulaRule(
-            formula=[f'AND({stp_conditions})'], fill=yellow_fill))
+        sheet.conditional_formatting.add(
+            cell_range, FormulaRule(
+                formula=[f'NOT(EXACT({col_letter}2,"{stp_mode}"))'], fill=yellow_fill))
 
 def evaluate_check(result: bool, critical: bool = True) -> str:
     """
@@ -306,8 +304,7 @@ def check_password_secret(config: str) -> bool:
     Search for the line "enable secret" in the running-config.
     If it exists, return True. If it does not exist, return False.
     """
-    match = re.search(r"^\s*enable secret\s+\S+", config, re.MULTILINE)
-    return float(match.group(1)) if match else 0.0
+    return bool(re.search(r"^\s*enable secret\s+\S+", config, re.MULTILINE))
 
 def parse_user_info(user_info: str):
     """
@@ -413,7 +410,7 @@ def get_vty_exec_timeout(output: str) -> int:
     else:
         return 0  # Not explicitly configured (uses the default value)
 
-def is_http_enabled(output):
+def is_http_enabled(output: str) -> bool:
     """
     Checks if the HTTP service is enabled in the configuration of a Cisco device.
 
@@ -426,10 +423,9 @@ def is_http_enabled(output):
     # Search for commands that enable the HTTP service
     if re.search(r'ip http server|ip http secure-server', output, re.IGNORECASE):
         return False
-    
     return True
 
-def check_snmp_version(output):
+def check_snmp_version(output: str) -> bool:
     """
     Checks if SNMP is configured and if it uses SNMPv1/v2 (insecure) or SNMPv3 (secure).
 
@@ -450,7 +446,7 @@ def check_snmp_version(output):
     # If no SNMP configuration is found, it also passes
     return True
 
-def get_stp_mode(output):
+def get_stp_mode(output: str) -> str:
     """
     Extracts the STP mode configured on a Cisco device.
 
@@ -463,7 +459,7 @@ def get_stp_mode(output):
     match = re.search(r'spanning-tree mode (\S+)', output)
     return match.group(1) if match else "No STP mode found"
 
-def check_stp_bpduguard(output):
+def check_stp_bpduguard(output: str) -> bool:
     """
     Checks if BPDU Guard is globally enabled on a Cisco device.
 
@@ -473,9 +469,7 @@ def check_stp_bpduguard(output):
     Returns:
         bool: True if it is enabled, False if it is not.
     """
-    if re.search(r'bpduguard', output):
-        return True
-    return False
+    return bool(re.search(r'bpduguard', output))
 
 def check_dhcp_snooping(output: str) -> bool:
     """
@@ -525,7 +519,7 @@ def check_logging_buffer(output: str) -> bool:
     """
     return bool(re.search(r'logging buffered', output))
 
-def check_ntp_synchronized(output):
+def check_ntp_synchronized(output: str) -> bool:
     """
     Checks if the Cisco device is synchronized with an NTP server.
 
